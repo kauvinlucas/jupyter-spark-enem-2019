@@ -1,0 +1,51 @@
+Fatores de influencia nas notas do enem:
+- renda familiar
+- acceso a bolsas de estudo
+- nivel institucioinal das maes
+- questoes raciais
+- regiao do pais
+Dados: Micordados enem, dados estadisticos IBGE, censo escolar 2018
+
+# Introdução
+O Exame Nacional do Ensino Médio (ENEM) é um exame padronizado de escala nacional usado para avaliar o dominio dos participantes que finalizaram o ensino médio nas áreas da ciência, tecnologia e linguagem no Brasil. Além de viabilizar o acesso por parte dos participantes ao ensino superior, a prova também reflete a realidade socioeconômica em que cada um deles vivem.
+
+O presente projeto tem por finalidade explorar os microdados do ENEM 2019 do Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira (2019) através de um análise exploratória de dados, e identificar algumas das variáveis que são mais sensíveis às notas da prova, com o intuito de derivar padrões preditivos que guiarão políticas públicas respeito à educação no Brasil.
+
+# Revisão da literatura
+Uma das tentativas para descrever os aspectos socioeconômicos do ENEM e o seu impacto nas notas das provas foram realizadas por Melo et al. (2021) mediante um estudo espacial e sociológico, no qual intentaram identificar variáveis com maior impacto no desempenho dos municípios nas médias e variâncias das notas do ENEM 2018. Os autores utilizaram a técnica de regressão linear múltipla com o método least absolute shrinkage and selection operator (Lasso) para selecionar as variáveis independentes que têm alguma influência nas variáveis de média e na variância das provas de redação e objetiva. Tal estudo conseguiu destacar as disparidades socioeconômicas refletidas nas contribuições da sociologia da educação protagonizadas por Pierre Bourdieu (1930-2002).
+
+# Descrição do problema.
+Um análise dos fatores que influênciam nas notas do ENEM poderia retratar as diversas desigualdades educacionais presentes no país e permitirão avaliar a efetividade das políticas públicas para a educação brasileira. Por tanto, é necessario identificar estes fatores por meio de uma exploração dos dados e de ferramentas estadísticas.
+
+# Objetivos específicos.
+* Estudar as dispersões das notas em cada cidade e região do país.
+* Explorar a relação entre a renta e os resultados da prova.
+* Identificar as variáveis que exerceram maior influência nas notas da prova mediante um algoritmo de regressão linear.
+
+# Descrição dos dados.
+Os microdados do ENEM 2019 consistem de
+
+
+# Referencias
+Melo, R. O., Freitas, A. C. de, Francisco, E. de R., & Motokane, M. T. (2021). Impacto das variáveis socioeconômicas no desempenho do Enem: uma análise espacial e sociológica. Revista De Administração Pública. Recuperado de https://bibliotecadigital.fgv.br/ojs/index.php/rap/article/view/84874
+
+Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira (2019). Microdados do
+Enem 2019. Recuperado em 20 de junho de 2020, de http://portal.inep.gov.br/web/guest/microdados.
+
+docker run --rm -p 10000:8888 -e JUPYTER_ENABLE_LAB=yes -v "${PWD}":/home/kauvin/enem jupyter/datascience-notebook
+
+
+### COMMANDS TO USE THE REPOSITORY
+
+# install virtualenv and ipkernel
+python -m pip install --user virtualenv
+
+# activate environment
+source venv/bin/activate
+
+# install ipykernel and add environment to jupyter
+python -m pip install ipykernel
+python -m ipykernel install --user --name=env
+
+# initiate jupyter notebook
+jupyter notebook --notebook-dir src
