@@ -2,7 +2,7 @@
 
 It's necessary to have Docker and Docker Compose installed in your machine.
 
-The whole project was done in a Jupyter notebook called main.ipynb that can be executed if your machine has at least 8G of RAM and have the necessary software installed. The following steps describe how to do it:
+The whole project was done in a Jupyter notebook in Portuguese language called main.ipynb that can be executed if your machine has at least 8G of RAM and have the necessary software installed. The following steps describe how to do it:
 
 1. Download this repository to your prefered directory:
 ```git clone https://github.com/kauvinlucas/jupyter-spark-enem-2019.git```
