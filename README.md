@@ -1,10 +1,10 @@
 # Para instruções e outras informações em português, por favor ir ao seguinte [link](docs/pt.md).
 
 # Jupyter-Spark ENEM 2019
-In this project I'll address some of the social and demographic aspects on the scores of the ENEM 2019, a standardized test used for admission in Brazilian colleges published in 2019. Visualizations were generated in Jupyter notebooks and data cleaning, Spark was used for ETL and Pandas for EDA analysis.
+Neste projeto, irei abordar alguns dos aspectos sociais e demográficos nas pontuações do ENEM 2019, um teste padronizado aplicado a estudantes e graduados do ensino médio usado para admissão em universidades brasileiras publicado em 2019. Spark foi usado para etapas de ETL; a análise estatística foi feita no Pandas, Statsmodels e Scikit-learn; e as visualizações dos dados foram geradas dentro do notebook com o auxilio das bibliotecas Matplotlib, Seaborn e Folium.
 
-The notebooks of this project can be found here. Also, I wrote a article about this project that can be found in the following link:
-<link>
+O notebook principal deste projeto pode ser encontrado [aqui](src/main.ipynb). Fiz um reporte do projeto em um artigo publicado [aqui](http://kauvinlucas.com/projects/jupyter-spark-enem-2019/pt.html). Um arquivo HTML do reporte pode ser encontrado [aqui](principal.html).
 
-# How to use this repository
-Instructions on how to use this repository can be found [here](docs/en.md). Docker and docker-compose must be installed on machine in order to execute the notebooks.
+
+# Como usar este repositório
+Instruções para usar este repositório podem ser encontradas [aqui](docs/pt.md). São necessarios Docker e Docker Compose instalados na máquina para poder usar os notebooks.
