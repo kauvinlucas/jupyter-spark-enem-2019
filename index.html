@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  	<meta charset="utf-8">
+  	<title>Projeto: Jupyter-Spark ENEM 2019</title>
+	<link rel="stylesheet" href="/assets/css/theme.css" id="theme">
+	<link rel="stylesheet" href="/assets/css/github.min.css">
+  	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+
+</head>
+<body>
+	<div class="article">
+		<div class="container_article">
+			<div class="blog_block">
+					<h1>Jupyter-Spark ENEM 2019</h1>
+					<div class="profile_picture"><img src="/images/user_large.jpg" height="40" width="40" alt=""></div>
+						<div class="title_block_bottom">
+							<h2>Por Kauvin Lucas</h2>
+							<img src="/images/clock.svg" style="font-size: 12px; font-weight: 200; margin-right: 5px; color: rgb(55, 0, 145); margin-top: 4px; float: left; text-align: left;"><h3>9 de Dezembro de 2021 - 10 min de leitura</h3>
+						</div>
+				
+					<div class="text_block">
+					<text>
+						<img src="/assets/images/main.jpg">
+						<p>Neste projeto, irei abordar algums dos aspectos sociais e demográficos nas pontuações do ENEM 2019, um teste padronizado usado para admissão em universidades brasileiras cujos microdados foram publicados em 2019. Spark foi usado para etapas de extração e transformação dos microdados; a análise estatística foi feita no Pandas, Statsmodels e Scikit-learn; e as visualizações dos dados foram geradas dentro do notebook com o auxilio das bibliotecas Matplotlib, Seaborn e Folium.</p>
+					<h>Introdução</h>
+					<p>O Exame Nacional do Ensino Médio (ENEM) é um exame padronizado de escala nacional usado para avaliar o dominio dos participantes que finalizaram ou estão por finalizar o ensino médio nas áreas da ciência, tecnologia e linguagem no Brasil. Além de viabilizar o acesso por parte dos participantes ao ensino superior, a prova também reflete a realidade socioeconômica em que cada um deles vivem.</p>
+					<p>O presente projeto tem por finalidade explorar os microdados do ENEM 2019 do Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira (2019) através de uma análise exploratória de dados, e identificar algumas das variáveis que são mais incidem nas notas da prova, com o intuito de derivar padrões preditivos que guiarão políticas públicas respeito à educação no Brasil.</p>
+					<h4>Revisão da literatura</h4>
+					<p>Uma das tentativas para descrever os aspectos socioeconômicos do ENEM e o seu impacto nas notas das provas foram realizadas por Melo et al. (2021) mediante um estudo espacial e sociológico, no qual intentaram identificar variáveis com maior impacto no desempenho dos municípios nas médias e variâncias das notas do ENEM 2018. Os autores utilizaram a técnica de regressão linear múltipla com o método Least Absolute Shrinkage and Selection Operator (LASSO) para selecionar as variáveis independentes que têm alguma influência nas variáveis de média e variância das provas de redação e objetiva. Tal estudo conseguiu destacar as disparidades socioeconômicas refletidas nas contribuições da sociologia da educação protagonizadas por Pierre Bourdieu (1930-2002).</p>
+
+					<h4> Descrição do problema</h4>
+					<p>Uma análise dos fatores que influenciaram nas notas do ENEM poderia retratar as diversas desigualdades educacionais presentes no país e permitirão avaliar a efetividade das políticas públicas para a educação brasileira. Por tanto, é necessario identificar estes fatores por meio de uma exploração estadística dos dados e interpretar-los dentro de um contexto socioeconômico relevante e atual.
+					</p>
+					<h4>Objetivos específicos</h4>
+					<p><ol>
+						<li>1. Explorar as médias e dispersões das notas em cada estado e região do país.</li>
+						<li>2. Identificar e estudar as variáveis que exerceram maior influência nas notas das provas mediante um algoritmo de regressão pela técnica de gradient boosting.
+						</li>
+					  </ol>
+					</p>
+					<h4>Descrição dos dados</h4>
+					<p>Os microdados do ENEM 2019 consistem de 5.095.270 observações e 136 atributos. 25 desses atributos são referentes às questões de um questionário que indaga aspectos sobre nível socioeconômico, família, educação e trabalho dos participantes. As notas de cada participante das provas de Ciências Naturais, Ciências Humanas, Linguagens e Códigos, Matemática e Redação estão representadas respectivamente pelas colunas NU_NOTA_CN, NU_NOTA_CH, NU_NOTA_LC, NU_NOTA_MT e NU_NOTA_REDACAO. As outras varíaveis relevantes representam nformações gerais sobre a realização das provas e a caracterização do participante e da escola que ele declarou ter frequentado, tais como idade, nacionalidade, necessidade de atendimento especial, etc.</p>
+					<p>Para cumprir com os objetivos do projeto, se tomou como variável de saída a média aritmética das notas de todas as provas. Para explorar as dispersões das notas em cada estado e região, se trabalhou com dados geoespaciais apartir da variável SG_UF_NASCIMENTO, que representa cada Unidade Federativa do Brasil.</p>
+					<h>Transformação dos dados</h>
+					<h4>Exploração e limpeza dos dados</h4>
+					<p>Ao descrever atributos numéricos (tabela a seguir), percebe-se a presença de muitos dados faltantes. Em algumas variáveis, tais como CO_ESCOLA, os dados faltantes são devido à falta de informação respeito à escola em que os participantes se encontram ou se encontravam ao momento de realizar as provas. Como não é possível inputar-los ou excluir-los, estes foram considerados como valores desconhecidos durante a analise.</p>
+
+		<!-- Codeblock 1-->
+<div class="code-toggle" id = "code-toogle1" href="#bar" name="bar" onclick="toggle_visibility('code-on-1', 'code-toogle1');">▾ Mostrar código ▾</div>
+<div id="code-on-1" style="display:none; width: 100%; margin-top: -30px;">
+<div class="clipboard" tabindex="0" onclick="CopyToClipboard('code1'); fadeinout('copy-tooltip1')" title="Copy to clipboard"></div>
+<div class= "code_block"><div class="copy-tooltip" id="copy-tooltip1">Copiado para prancheta</div>
+<pre><code class="language-python hljs" id="code1"><span class="hljs-comment"># Criar um dataframe</span>
+df = spark.read.options(header=<span class="hljs-string">'True'</span>, inferSchema=<span class="hljs-string">'True'</span>, delimiter=<span class="hljs-string">';'</span>)\
+	.csv(<span class="hljs-string">"file:///mnt/assets/data/MICRODADOS_ENEM_2019.csv"</span>)
+
+<span class="hljs-comment"># Descrever atributos numéricos</span>
+pd.set_option(<span class="hljs-string">'display.max_rows'</span>, <span class="hljs-literal">None</span>)
+numeric_features = [t[<span class="hljs-number">0</span>] <span class="hljs-keyword">for</span> t <span class="hljs-keyword">in</span> df.dtypes <span class="hljs-keyword">if</span> t[<span class="hljs-number">1</span>] == <span class="hljs-string">'int'</span> <span class="hljs-keyword">or</span> t[<span class="hljs-number">1</span>] == <span class="hljs-string">'double'</span>]
+df.select(numeric_features).describe().toPandas().transpose()</code></pre></div></div>
+		<!-- END of codeblock1 -->
+		<div class="table-block"><table class="dataframe" border="1">
+<thead>  <tr><th>summary</th><th>count</th><th>mean</th><th>stddev</th><th>min</th><th>max</th>  </tr></thead><tbody>  <tr><th>NU_ANO</th><td>5095270</td><td>2019.0</td><td>0.0</td><td>2019</td><td>2019</td>  </tr>  <tr><th>CO_MUNICIPIO_RESIDENCIA</th><td>5095270</td><td>3086472.4672313733</td><td>997360.415429331</td><td>1100015</td><td>5300108</td>  </tr>  <tr><th>CO_UF_RESIDENCIA</th><td>5095270</td><td>30.714074033368203</td><td>9.943231127628104</td><td>11</td><td>53</td>  </tr>  <tr><th>NU_IDADE</th><td>5095201</td><td>22.08764325489809</td><td>7.454793312005096</td><td>10</td><td>94</td>  </tr>  <tr><th>TP_ESTADO_CIVIL</th><td>5095270</td><td>1.075275893132258</td><td>0.4388921371300876</td><td>0</td><td>4</td>  </tr>  <tr><th>TP_COR_RACA</th><td>5095270</td><td>2.128251103474399</td><td>1.0175120935552757</td><td>0</td><td>5</td>  </tr>  <tr><th>TP_NACIONALIDADE</th><td>5095270</td><td>1.0302539414005538</td><td>0.2097909867493207</td><td>0</td><td>4</td>  </tr>  <tr><th>CO_MUNICIPIO_NASCIMENTO</th><td>4950021</td><td>3059766.106359549</td><td>984026.3441643384</td><td>1100015</td><td>5300108</td>  </tr>  <tr><th>CO_UF_NASCIMENTO</th><td>4950021</td><td>30.446578711484253</td><td>9.806732559276076</td><td>11</td><td>53</td>  </tr>  <tr><th>TP_ST_CONCLUSAO</th><td>5095270</td><td>1.5414019276701725</td><td>0.7166870444119421</td><td>1</td><td>4</td>  </tr>  <tr><th>TP_ANO_CONCLUIU</th><td>5095270</td><td>2.9624620481348387</td><td>4.108758232992581</td><td>0</td><td>13</td>  </tr>  <tr><th>TP_ESCOLA</th><td>5095270</td><td>1.3306058363933608</td><td>0.5541870699265091</td><td>1</td><td>3</td>  </tr>  <tr><th>TP_ENSINO</th><td>2878197</td><td>1.0047943208890844</td><td>0.06907486542910483</td><td>1</td><td>2</td>  </tr>  <tr><th>IN_TREINEIRO</th><td>5095270</td><td>0.12102754122941473</td><td>0.32615931133656717</td><td>0</td><td>1</td>  </tr>  <tr><th>CO_ESCOLA</th><td>1147412</td><td>3.126574535072145E7</td><td>9658638.601946082</td><td>11000058</td><td>53088018</td>  </tr>  <tr><th>CO_MUNICIPIO_ESC</th><td>1147412</td><td>3128667.2697522775</td><td>969519.8119841247</td><td>1100015</td><td>5300108</td>  </tr>  <tr><th>CO_UF_ESC</th><td>1147412</td><td>31.132819771799493</td><td>9.665164064865337</td><td>11</td><td>53</td>  </tr>  <tr><th>TP_DEPENDENCIA_ADM_ESC</th><td>1147412</td><td>2.252067260931557</td><td>0.7486916602524979</td><td>1</td><td>4</td>  </tr>  <tr><th>TP_LOCALIZACAO_ESC</th><td>1147412</td><td>1.0362040836247137</td><td>0.18679769367985613</td><td>1</td><td>2</td>  </tr>  <tr><th>TP_SIT_FUNC_ESC</th><td>1147412</td><td>1.0056065301739916</td><td>0.1193745555073643</td><td>1</td><td>4</td>  </tr>  <tr><th>IN_BAIXA_VISAO</th><td>5095270</td><td>0.001217011071052172</td><td>0.034864454587238455</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_CEGUEIRA</th><td>5095270</td><td>1.4032622412551247E-4</td><td>0.011845107015682223</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_SURDEZ</th><td>5095270</td><td>3.1853071574224724E-4</td><td>0.017844587874771937</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_DEFICIENCIA_AUDITIVA</th><td>5095270</td><td>4.323617786692364E-4</td><td>0.020788817349248784</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_SURDO_CEGUEIRA</th><td>5095270</td><td>9.224241306152569E-6</td><td>0.0030371299000639287</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_DEFICIENCIA_FISICA</th><td>5095270</td><td>0.00146842071175816</td><td>0.0382918364686419</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_DEFICIENCIA_MENTAL</th><td>5095270</td><td>4.4119349906874416E-4</td><td>0.020999974617026913</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_DEFICIT_ATENCAO</th><td>5095270</td><td>0.0016364196598021303</td><td>0.04041957584065067</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_DISLEXIA</th><td>5095270</td><td>3.1323168350254257E-4</td><td>0.0176955822416427</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_DISCALCULIA</th><td>5095270</td><td>7.497149316915493E-5</td><td>0.008658284307944979</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_AUTISMO</th><td>5095270</td><td>2.3629758580016367E-4</td><td>0.01537015925799181</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_VISAO_MONOCULAR</th><td>5095270</td><td>2.1765284273453614E-4</td><td>0.01475145798495667</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_OUTRA_DEF</th><td>5095270</td><td>6.013420289798186E-4</td><td>0.024514904337825022</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_GESTANTE</th><td>5095270</td><td>2.767272391845771E-4</td><td>0.016632820431762792</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_LACTANTE</th><td>5095270</td><td>7.124254455602941E-4</td><td>0.026681792204913256</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_IDOSO</th><td>5095270</td><td>4.553242517079566E-5</td><td>0.006747618906315261</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_ESTUDA_CLASSE_HOSPITALAR</th><td>5095270</td><td>4.710250879737482E-6</td><td>0.0021703063419033566</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_SEM_RECURSO</th><td>5095270</td><td>0.0012026840579596372</td><td>0.03465887829650362</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_BRAILLE</th><td>5095270</td><td>5.9270656903363316E-5</td><td>0.007698516449576015</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_AMPLIADA_24</th><td>5095270</td><td>2.1333511276144346E-4</td><td>0.014604439145391009</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_AMPLIADA_18</th><td>5095270</td><td>8.969102716833455E-4</td><td>0.0299350296395054</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_LEDOR</th><td>5095270</td><td>0.0012313380841447068</td><td>0.0350688199406922</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_ACESSO</th><td>5095270</td><td>0.0015714574497524174</td><td>0.03961045668969726</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_TRANSCRICAO</th><td>5095270</td><td>0.001105731394018374</td><td>0.03323415365063615</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_LIBRAS</th><td>5095270</td><td>1.8958759790943365E-4</td><td>0.013767777295324536</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_TEMPO_ADICIONAL</th><td>5095270</td><td>0.0024669938982625063</td><td>0.04960754299849385</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_LEITURA_LABIAL</th><td>5095270</td><td>1.1736375108679226E-4</td><td>0.010832820494584363</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_MESA_CADEIRA_RODAS</th><td>5095270</td><td>3.5326881598031116E-4</td><td>0.018792128310337435</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_MESA_CADEIRA_SEPARADA</th><td>5095270</td><td>2.798674064377354E-4</td><td>0.016726898564410918</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_APOIO_PERNA</th><td>5095270</td><td>4.4099723861542174E-4</td><td>0.020995305345793847</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_GUIA_INTERPRETE</th><td>5095270</td><td>1.7663440799015557E-6</td><td>0.0013290377370839019</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_COMPUTADOR</th><td>5095270</td><td>1.5700836265791606E-6</td><td>0.0012530289180866798</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_CADEIRA_ESPECIAL</th><td>5095270</td><td>2.551385893191136E-6</td><td>0.0015973039423842089</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_CADEIRA_CANHOTO</th><td>5095270</td><td>2.747646346513531E-6</td><td>0.0016576004754481782</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_CADEIRA_ACOLCHOADA</th><td>5095270</td><td>3.414931887809675E-5</td><td>0.00584364264855837</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_PROVA_DEITADO</th><td>5095270</td><td>1.9626045332239507E-7</td><td>4.430129268118443E-4</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_MOBILIARIO_OBESO</th><td>5095270</td><td>1.157936674602131E-5</td><td>0.00340282749148895</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_LAMINA_OVERLAY</th><td>5095270</td><td>5.299032239704667E-6</td><td>0.0023019568197399304</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_PROTETOR_AURICULAR</th><td>5095270</td><td>9.813022666119754E-7</td><td>9.90606630428303E-4</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_MEDIDOR_GLICOSE</th><td>5095270</td><td>1.157936674602131E-4</td><td>0.010760124627990133</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_MAQUINA_BRAILE</th><td>5095270</td><td>3.159793298490561E-5</td><td>0.005621115614961742</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_SOROBAN</th><td>5095270</td><td>8.43919949286299E-6</td><td>0.0029050180600200012</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_MARCA_PASSO</th><td>5095270</td><td>3.140167253158321E-6</td><td>0.0017720490988674083</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_SONDA</th><td>5095270</td><td>1.9626045332239507E-6</td><td>0.0014009286443600094</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_MEDICAMENTOS</th><td>5095270</td><td>4.847633197063159E-5</td><td>0.006962326588820594</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_SALA_INDIVIDUAL</th><td>5095270</td><td>5.8878135996718526E-5</td><td>0.0076729838339848035</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_SALA_ESPECIAL</th><td>5095270</td><td>5.004641559721075E-5</td><td>0.007074172797941786</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_SALA_ACOMPANHANTE</th><td>5095270</td><td>1.040180402608694E-5</td><td>0.0032251663321450413</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_MOBILIARIO_ESPECIFICO</th><td>5095270</td><td>4.317729973092692E-6</td><td>0.0020779105316872395</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_MATERIAL_ESPECIFICO</th><td>5095270</td><td>3.1794193438228E-5</td><td>0.005638544919324245</td><td>0</td><td>1</td>  </tr>  <tr><th>IN_NOME_SOCIAL</th><td>5095270</td><td>7.732661860902366E-5</td><td>0.00879321638412618</td><td>0</td><td>1</td>  </tr>  <tr><th>CO_MUNICIPIO_PROVA</th><td>5095270</td><td>3088260.6005940805</td><td>997757.9530457897</td><td>1100015</td><td>5300108</td>  </tr>  <tr><th>CO_UF_PROVA</th><td>5095270</td><td>30.733058699538983</td><td>9.947315640767211</td><td>11</td><td>53</td>  </tr>  <tr><th>TP_PRESENCA_CN</th><td>5095270</td><td>0.7289617625758792</td><td>0.44533925290210724</td><td>0</td><td>2</td>  </tr>  <tr><th>TP_PRESENCA_CH</th><td>5095270</td><td>0.7715565612813452</td><td>0.42172907661541864</td><td>0</td><td>2</td>  </tr>  <tr><th>TP_PRESENCA_LC</th><td>5095270</td><td>0.7715565612813452</td><td>0.42172907661541864</td><td>0</td><td>2</td>  </tr>  <tr><th>TP_PRESENCA_MT</th><td>5095270</td><td>0.7289617625758792</td><td>0.44533925290210724</td><td>0</td><td>2</td>  </tr>  <tr><th>CO_PROVA_CN</th><td>3710433</td><td>504.51365757042373</td><td>1.2160906024736007</td><td>503</td><td>546</td>  </tr>  <tr><th>CO_PROVA_CH</th><td>3923145</td><td>508.50982056487845</td><td>1.1979859493586222</td><td>507</td><td>564</td>  </tr>  <tr><th>CO_PROVA_LC</th><td>3923145</td><td>512.5079282055596</td><td>1.174765793017519</td><td>511</td><td>565</td>  </tr>  <tr><th>CO_PROVA_MT</th><td>3710433</td><td>516.5098731064542</td><td>1.147831354514575</td><td>515</td><td>558</td>  </tr>  <tr><th>NU_NOTA_CN</th><td>3710433</td><td>477.8240873504527</td><td>76.0977446963839</td><td>0.0</td><td>860.9</td>  </tr>  <tr><th>NU_NOTA_CH</th><td>3923145</td><td>507.2486632280999</td><td>82.41163433304044</td><td>0.0</td><td>835.1</td>  </tr>  <tr><th>NU_NOTA_LC</th><td>3923145</td><td>520.5176577210375</td><td>64.15065496536897</td><td>0.0</td><td>801.7</td>  </tr>  <tr><th>NU_NOTA_MT</th><td>3710433</td><td>523.1241219825274</td><td>109.06368552884489</td><td>0.0</td><td>985.5</td>  </tr>  <tr><th>TP_LINGUA</th><td>5095270</td><td>0.5247019294365166</td><td>0.4993894909061271</td><td>0</td><td>1</td>  </tr>  <tr><th>TP_STATUS_REDACAO</th><td>3923144</td><td>1.139621946071824</td><td>0.7851200210828325</td><td>1</td><td>9</td>  </tr>  <tr><th>NU_NOTA_COMP1</th><td>3923144</td><td>120.47772398871925</td><td>33.42683305251067</td><td>0</td><td>200</td>  </tr>  <tr><th>NU_NOTA_COMP2</th><td>3923144</td><td>122.73657556286489</td><td>42.931275567673374</td><td>0</td><td>200</td>  </tr>  <tr><th>NU_NOTA_COMP3</th><td>3923144</td><td>114.81312946962946</td><td>40.17709956981246</td><td>0</td><td>200</td>  </tr>  <tr><th>NU_NOTA_COMP4</th><td>3923144</td><td>121.62860195802142</td><td>38.12234971298542</td><td>0</td><td>200</td>  </tr>  <tr><th>NU_NOTA_COMP5</th><td>3923144</td><td>91.5323169376398</td><td>59.44187008213425</td><td>0</td><td>200</td>  </tr>  <tr><th>NU_NOTA_REDACAO</th><td>3923144</td><td>571.1883479168748</td><td>188.76327214930336</td><td>0</td><td>1000</td>  </tr>  <tr><th>Q005</th><td>5095270</td><td>3.868090012894312</td><td>1.4809904417842097</td><td>1</td><td>20</td>  </tr></tbody>  </table></div><div class="legend">Tabela 1 - estatísticas descritivas dos dados</div>
+		<p>Os valores faltantes nas colunas representando as notas indicariam ausência e não reaplicação na prova, razão pela qual foram excluídas as respectivas observações do conjunto de dados.</p>
+		<p>Foram removidos algums atributos irrelevantes à simples vista, entre ellas os dados da escola de cada participante, para que o processamento dos dados seja mais rápido. O argumento para a exclusão dos dados da escola tem a ver com ambigüidade no significado (um mesmo aluno poderia ou não ter cursado em escola pública e privada durante o ensino médio) e com a enorme quantidade de dados faltantes nesses atributos, o que atrapalharia na analise dos dados.</p>
+		<p>Além disso, as observações cujas notas das provas de redação não foram de aprovação e cujos alunos foram eliminados ou faltaram a prova foram excluídas do conjunto de dados, já que o enfoque seria somente nos participantes aprovados.</p>
+
+<!-- Codeblock 2-->
+	<div class="code-toggle" id = "code-toogle2" href="#bar" name="bar" onclick="toggle_visibility('code-on-2', 'code-toogle2');">▾ Mostrar código ▾</div>
+	<div id="code-on-2" style="display:none; width: 100%; margin-top: -30px;">
+	<div class="clipboard" tabindex="0" onclick="CopyToClipboard('code2'); fadeinout('copy-tooltip2')" title="Copy to clipboard"></div>
+	<div class= "code_block"><div class="copy-tooltip" id="copy-tooltip2">Copiado para prancheta</div>
+<pre><code class="language-python hljs" id="code2">length = <span class="hljs-built_in">len</span>(df.columns)
+
+<span class="hljs-comment"># Remover valores faltantes nas variáveis das notas</span>
+df = df.dropna(subset=[<span class="hljs-string">"NU_NOTA_CN"</span>, <span class="hljs-string">"NU_NOTA_CH"</span>, <span class="hljs-string">"NU_NOTA_MT"</span>, <span class="hljs-string">"NU_NOTA_LC"</span>, <span class="hljs-string">"NU_NOTA_REDACAO"</span>])
+
+<span class="hljs-comment"># Filtrar participantes que não aprovaram as provas</span>
+df = df.<span class="hljs-built_in">filter</span>((df[<span class="hljs-string">"TP_STATUS_REDACAO"</span>]  == <span class="hljs-string">"1"</span>)
+				&amp; (df[<span class="hljs-string">"TP_PRESENCA_CN"</span>]  == <span class="hljs-string">"1"</span>)
+				&amp; (df[<span class="hljs-string">"TP_PRESENCA_CH"</span>]  == <span class="hljs-string">"1"</span>)
+				&amp; (df[<span class="hljs-string">"TP_PRESENCA_LC"</span>]  == <span class="hljs-string">"1"</span>)
+				&amp; (df[<span class="hljs-string">"TP_PRESENCA_MT"</span>]  == <span class="hljs-string">"1"</span>))
+
+<span class="hljs-comment"># Excluir atributos irrelevantes ao problema</span>
+df = df.drop(<span class="hljs-string">"NU_INSCRICAO"</span>, <span class="hljs-string">"NU_ANO"</span>, <span class="hljs-string">"CO_MUNICIPIO_RESIDENCIA"</span>, <span class="hljs-string">"NO_MUNICIPIO_RESIDENCIA"</span>, 
+				<span class="hljs-string">"CO_UF_RESIDENCIA"</span>, <span class="hljs-string">"CO_MUNICIPIO_NASCIMENTO"</span>, <span class="hljs-string">"CO_UF_NASCIMENTO"</span>, <span class="hljs-string">"TP_ESCOLA"</span>, 
+				<span class="hljs-string">"TP_ENSINO"</span>, <span class="hljs-string">"CO_ESCOLA"</span>, <span class="hljs-string">"CO_MUNICIPIO_ESC"</span>, <span class="hljs-string">"NO_MUNICIPIO_ESC"</span>, <span class="hljs-string">"CO_UF_ESC"</span>, 
+				<span class="hljs-string">"SG_UF_ESC"</span>, <span class="hljs-string">"TP_DEPENDENCIA_ADM_ESC"</span>, <span class="hljs-string">"TP_LOCALIZACAO_ESC"</span>, <span class="hljs-string">"TP_SIT_FUNC_ESC"</span>, 
+				<span class="hljs-string">"CO_MUNICIPIO_PROVA"</span>, <span class="hljs-string">"CO_UF_PROVA"</span>, <span class="hljs-string">"TP_PRESENCA_CN"</span>, <span class="hljs-string">"TP_PRESENCA_CH"</span>, 
+				<span class="hljs-string">"TP_PRESENCA_LC"</span>, <span class="hljs-string">"TP_PRESENCA_MT"</span>, <span class="hljs-string">"CO_PROVA_CN"</span>, <span class="hljs-string">"CO_PROVA_CH"</span>, <span class="hljs-string">"CO_PROVA_LC"</span>, 
+				<span class="hljs-string">"CO_PROVA_MT"</span>, <span class="hljs-string">"TX_RESPOSTAS_CN"</span>, <span class="hljs-string">"TX_RESPOSTAS_CH"</span>, <span class="hljs-string">"TX_RESPOSTAS_LC"</span>, <span class="hljs-string">"TX_RESPOSTAS_MT"</span>, 
+				<span class="hljs-string">"TX_GABARITO_CN"</span>, <span class="hljs-string">"TX_GABARITO_CH"</span>, <span class="hljs-string">"TX_GABARITO_LC"</span>, <span class="hljs-string">"TX_GABARITO_MT"</span>, <span class="hljs-string">"NU_NOTA_COMP1"</span>, 
+				<span class="hljs-string">"NU_NOTA_COMP2"</span>, <span class="hljs-string">"NU_NOTA_COMP3"</span>, <span class="hljs-string">"NU_NOTA_COMP4"</span>, <span class="hljs-string">"NU_NOTA_COMP4"</span>, <span class="hljs-string">"NU_NOTA_COMP5"</span>, 
+				<span class="hljs-string">"NO_MUNICIPIO_PROVA"</span>, <span class="hljs-string">"TP_PRESENCA_CN"</span>, <span class="hljs-string">"TP_PRESENCA_CH"</span>, <span class="hljs-string">"TP_PRESENCA_LC"</span>, 
+				<span class="hljs-string">"TP_PRESENCA_MT"</span>, <span class="hljs-string">"NO_MUNICIPIO_NASCIMENTO"</span>, <span class="hljs-string">"TP_STATUS_REDACAO"</span>)
+
+<span class="hljs-built_in">print</span>(<span class="hljs-string">"O total de atributos reduziu-se de {} a {}"</span>.<span class="hljs-built_in">format</span>(length, <span class="hljs-built_in">len</span>(df.columns)))</code></pre></div></div>
+<!-- END of codeblock 2 -->
+		<h4>Transformação e redução dos atributos (feature engineering)</h4>					
+		<p>A seguir descrevo algumas das ideias de transformação dos atributos que surgiram durante o projeto:</p>
+		<p><ol>
+						<li>- Conversão dos atributos relacionados aos dados dos pedidos de recursos especializados e específicos para a realização das provas em um único atributo.</li>
+						<li>- Cálculo das médias de notas de todas as provas.</li>
+					  </ol>
+					</p>
+		<p>A conversão dos atributos relacionados aos dados dos pedidos de recursos especializados e específicos para a realização das provas foi feita atribuindo com o valor de 1 à observação cujo participante solicitou o recurso para atendimento especializado e 0 se não fez a solicitação. Os valores resultantes dessa transformação foram gravados numa nova coluna chamada RECURSO_ESPECIALIZADO.</p>
+<!-- Codeblock 3-->
+<div class="code-toggle" id = "code-toogle3" href="#bar" name="bar" onclick="toggle_visibility('code-on-3', 'code-toogle3');">▾ Mostrar código ▾</div>
+<div id="code-on-3" style="display:none; width: 100%; margin-top: -30px;">
+<div class="clipboard" tabindex="0" onclick="CopyToClipboard('code3'); fadeinout('copy-tooltip3')" title="Copy to clipboard"></div>
+<div class= "code_block"><div class="copy-tooltip" id="copy-tooltip3">Copiado para prancheta</div>
+<pre><code class="language-python hljs" id="code3">length = <span class="hljs-built_in">len</span>(df.columns)
+recursos_esp = [<span class="hljs-string">'IN_TREINEIRO'</span>, <span class="hljs-string">'IN_BAIXA_VISAO'</span>, <span class="hljs-string">'IN_CEGUEIRA'</span>, <span class="hljs-string">'IN_SURDEZ'</span>, <span class="hljs-string">'IN_DEFICIENCIA_AUDITIVA'</span>,
+				<span class="hljs-string">'IN_SURDO_CEGUEIRA'</span>, <span class="hljs-string">'IN_DEFICIENCIA_FISICA'</span>, <span class="hljs-string">'IN_DEFICIENCIA_MENTAL'</span>, <span class="hljs-string">'IN_DEFICIT_ATENCAO'</span>,
+				<span class="hljs-string">'IN_DISLEXIA'</span>, <span class="hljs-string">'IN_DISCALCULIA'</span>, <span class="hljs-string">'IN_AUTISMO'</span>, <span class="hljs-string">'IN_VISAO_MONOCULAR'</span>, <span class="hljs-string">'IN_OUTRA_DEF'</span>,<span class="hljs-string">'IN_GESTANTE'</span>,
+				<span class="hljs-string">'IN_LACTANTE'</span>,<span class="hljs-string">'IN_IDOSO'</span>, <span class="hljs-string">'IN_ESTUDA_CLASSE_HOSPITALAR'</span>, <span class="hljs-string">'IN_SEM_RECURSO'</span>, <span class="hljs-string">'IN_BRAILLE'</span>,
+				<span class="hljs-string">'IN_AMPLIADA_24'</span>,<span class="hljs-string">'IN_AMPLIADA_18'</span>, <span class="hljs-string">'IN_LEDOR'</span>, <span class="hljs-string">'IN_ACESSO'</span>, <span class="hljs-string">'IN_TRANSCRICAO'</span>, <span class="hljs-string">'IN_LIBRAS'</span>,
+				<span class="hljs-string">'IN_TEMPO_ADICIONAL'</span>, <span class="hljs-string">'IN_LEITURA_LABIAL'</span>, <span class="hljs-string">'IN_MESA_CADEIRA_RODAS'</span>, <span class="hljs-string">'IN_MESA_CADEIRA_SEPARADA'</span>,
+				<span class="hljs-string">'IN_APOIO_PERNA'</span>, <span class="hljs-string">'IN_GUIA_INTERPRETE'</span>, <span class="hljs-string">'IN_COMPUTADOR'</span>, <span class="hljs-string">'IN_CADEIRA_ESPECIAL'</span>,
+				<span class="hljs-string">'IN_CADEIRA_CANHOTO'</span>,<span class="hljs-string">'IN_CADEIRA_ACOLCHOADA'</span>, <span class="hljs-string">'IN_PROVA_DEITADO'</span>, <span class="hljs-string">'IN_MOBILIARIO_OBESO'</span>,
+				<span class="hljs-string">'IN_LAMINA_OVERLAY'</span>, <span class="hljs-string">'IN_PROTETOR_AURICULAR'</span>, <span class="hljs-string">'IN_MEDIDOR_GLICOSE'</span>, <span class="hljs-string">'IN_MAQUINA_BRAILE'</span>,
+				<span class="hljs-string">'IN_SOROBAN'</span>, <span class="hljs-string">'IN_MARCA_PASSO'</span>, <span class="hljs-string">'IN_SONDA'</span>, <span class="hljs-string">'IN_MEDICAMENTOS'</span>, <span class="hljs-string">'IN_SALA_INDIVIDUAL'</span>,
+				<span class="hljs-string">'IN_SALA_ESPECIAL'</span>, <span class="hljs-string">'IN_SALA_ACOMPANHANTE'</span>, <span class="hljs-string">'IN_MOBILIARIO_ESPECIFICO'</span>, <span class="hljs-string">'IN_MATERIAL_ESPECIFICO'</span>,
+				<span class="hljs-string">'IN_NOME_SOCIAL'</span>]
+
+<span class="hljs-comment"># Criação da coluna 'TP_RECURSO_ESPECIALIZADO'</span>
+df = df.withColumn(<span class="hljs-string">'TP_RECURSO_ESPECIALIZADO'</span>, 
+					when(reduce(add, [col(x) <span class="hljs-keyword">for</span> x <span class="hljs-keyword">in</span> recursos_esp]) == <span class="hljs-number">0</span>, <span class="hljs-number">0</span>).otherwise(<span class="hljs-number">1</span>))
+
+<span class="hljs-comment"># Exclusão dos atributos relacionados aos dados dos pedidos de recursos especializados e específicos</span>
+df = df.drop(<span class="hljs-string">'IN_TREINEIRO'</span>, <span class="hljs-string">'IN_BAIXA_VISAO'</span>, <span class="hljs-string">'IN_CEGUEIRA'</span>, <span class="hljs-string">'IN_SURDEZ'</span>, <span class="hljs-string">'IN_DEFICIENCIA_AUDITIVA'</span>,
+				<span class="hljs-string">'IN_SURDO_CEGUEIRA'</span>, <span class="hljs-string">'IN_DEFICIENCIA_FISICA'</span>, <span class="hljs-string">'IN_DEFICIENCIA_MENTAL'</span>, <span class="hljs-string">'IN_DEFICIT_ATENCAO'</span>,
+				<span class="hljs-string">'IN_DISLEXIA'</span>, <span class="hljs-string">'IN_DISCALCULIA'</span>, <span class="hljs-string">'IN_AUTISMO'</span>, <span class="hljs-string">'IN_VISAO_MONOCULAR'</span>, <span class="hljs-string">'IN_OUTRA_DEF'</span>,<span class="hljs-string">'IN_GESTANTE'</span>,
+				<span class="hljs-string">'IN_LACTANTE'</span>,<span class="hljs-string">'IN_IDOSO'</span>, <span class="hljs-string">'IN_ESTUDA_CLASSE_HOSPITALAR'</span>, <span class="hljs-string">'IN_SEM_RECURSO'</span>, <span class="hljs-string">'IN_BRAILLE'</span>,
+				<span class="hljs-string">'IN_AMPLIADA_24'</span>,<span class="hljs-string">'IN_AMPLIADA_18'</span>, <span class="hljs-string">'IN_LEDOR'</span>, <span class="hljs-string">'IN_ACESSO'</span>, <span class="hljs-string">'IN_TRANSCRICAO'</span>, <span class="hljs-string">'IN_LIBRAS'</span>,
+				<span class="hljs-string">'IN_TEMPO_ADICIONAL'</span>, <span class="hljs-string">'IN_LEITURA_LABIAL'</span>, <span class="hljs-string">'IN_MESA_CADEIRA_RODAS'</span>, <span class="hljs-string">'IN_MESA_CADEIRA_SEPARADA'</span>,
+				<span class="hljs-string">'IN_APOIO_PERNA'</span>, <span class="hljs-string">'IN_GUIA_INTERPRETE'</span>, <span class="hljs-string">'IN_COMPUTADOR'</span>, <span class="hljs-string">'IN_CADEIRA_ESPECIAL'</span>,
+				<span class="hljs-string">'IN_CADEIRA_CANHOTO'</span>,<span class="hljs-string">'IN_CADEIRA_ACOLCHOADA'</span>, <span class="hljs-string">'IN_PROVA_DEITADO'</span>, <span class="hljs-string">'IN_MOBILIARIO_OBESO'</span>,
+				<span class="hljs-string">'IN_LAMINA_OVERLAY'</span>, <span class="hljs-string">'IN_PROTETOR_AURICULAR'</span>, <span class="hljs-string">'IN_MEDIDOR_GLICOSE'</span>, <span class="hljs-string">'IN_MAQUINA_BRAILE'</span>,
+				<span class="hljs-string">'IN_SOROBAN'</span>, <span class="hljs-string">'IN_MARCA_PASSO'</span>, <span class="hljs-string">'IN_SONDA'</span>, <span class="hljs-string">'IN_MEDICAMENTOS'</span>, <span class="hljs-string">'IN_SALA_INDIVIDUAL'</span>,
+				<span class="hljs-string">'IN_SALA_ESPECIAL'</span>, <span class="hljs-string">'IN_SALA_ACOMPANHANTE'</span>, <span class="hljs-string">'IN_MOBILIARIO_ESPECIFICO'</span>, <span class="hljs-string">'IN_MATERIAL_ESPECIFICO'</span>,
+				<span class="hljs-string">'IN_NOME_SOCIAL'</span>)
+<span class="hljs-built_in">print</span>(<span class="hljs-string">"O total de atributos reduziu-se de {} a {}"</span>.<span class="hljs-built_in">format</span>(length, <span class="hljs-built_in">len</span>(df.columns)))
+</code></pre></div></div>
+		<!-- END of codeblock 3 -->
+
+					<p></p>A média de todas as provas foram calculadas e representadas numa nova coluna chamada MEDIA_NOTAS</p>
+<!-- Codeblock 4-->
+<div class="code-toggle" id="code-toogle4" href="#bar" name="bar" onclick="toggle_visibility('code-on-4', 'code-toogle4');">▾ Mostrar código ▾</div>
+<div id="code-on-4" style="display:none; width: 100%; margin-top: -30px;">
+<div class="clipboard" tabindex="0" onclick="CopyToClipboard('code4'); fadeinout('copy-tooltip4')" title="Copy to clipboard"></div>
+<div class="code_block"><div class="copy-tooltip" id="copy-tooltip4">Copiado para prancheta</div>
+<pre><code class="language-python hljs" id="code4">length = <span class="hljs-built_in">len</span>(df.columns)
+notas_col = [col(<span class="hljs-string">"NU_NOTA_CN"</span>), col(<span class="hljs-string">"NU_NOTA_CH"</span>), col(<span class="hljs-string">"NU_NOTA_LC"</span>), col(<span class="hljs-string">"NU_NOTA_MT"</span>), col(<span class="hljs-string">"NU_NOTA_REDACAO"</span>)]
+average_func = <span class="hljs-built_in">sum</span>(x <span class="hljs-keyword">for</span> x <span class="hljs-keyword">in</span> notas_col)/<span class="hljs-built_in">len</span>(notas_col)
+df = df.withColumn(<span class="hljs-string">"TP_MEDIA_NOTAS"</span>, average_func)
+df = df.drop(<span class="hljs-string">"NU_NOTA_CN"</span>, <span class="hljs-string">"NU_NOTA_CH"</span>, <span class="hljs-string">"NU_NOTA_LC"</span>, <span class="hljs-string">"NU_NOTA_MT"</span>, <span class="hljs-string">"NU_NOTA_REDACAO"</span>)
+<span class="hljs-built_in">print</span>(<span class="hljs-string">"O total de atributos reduziu-se de {} a {}"</span>.<span class="hljs-built_in">format</span>(length, <span class="hljs-built_in">len</span>(df.columns)))</code></pre></div></div>
+<!-- END of codeblock 4 -->
+					<h4>Amostragem</h4>
+					<p> Nesta etapa foi selecionado uma amostra aleatória estratificada de 30% que é representativa de cada Unidade da Federação do Brasil. O objetivo dessa etapa foi reducir razoavelmente a quantidade de observações para a analise exploratória de dados e regressão.</p>
+
+<!-- Codeblock 5-->
+<div class="code-toggle" id="code-toogle5" href="#bar" name="bar" onclick="toggle_visibility('code-on-5', 'code-toogle5');">▾ Mostrar código ▾</div>
+<div id="code-on-5" style="display:none; width: 100%; margin-top: -30px;">
+<div class="clipboard" tabindex="0" onclick="CopyToClipboard('code5'); fadeinout('copy-tooltip5')" title="Copy to clipboard"></div>
+<div class="code_block"><div class="copy-tooltip" id="copy-tooltip5">Copiado para prancheta</div>
+<pre><code class="language-python hljs" id="code5"><span class="hljs-comment"># Determinar porcentagem da população para amostragem</span>
+por = <span class="hljs-number">0.3</span>
+
+<span class="hljs-comment"># Amostragem pelo método sampleBy</span>
+df = df.sampleBy(<span class="hljs-string">'SG_UF_RESIDENCIA'</span>, fractions={<span class="hljs-string">'TO'</span>:por, <span class="hljs-string">'MG'</span>:por, <span class="hljs-string">'MT'</span>:por, <span class="hljs-string">'BA'</span>:por, <span class="hljs-string">'SP'</span>:por, <span class="hljs-string">'RN'</span>:por, 
+												<span class="hljs-string">'PR'</span>:por, <span class="hljs-string">'CE'</span>:por, <span class="hljs-string">'MA'</span>:por, <span class="hljs-string">'DF'</span>:por, <span class="hljs-string">'AP'</span>:por, <span class="hljs-string">'RS'</span>:por, 
+												<span class="hljs-string">'PE'</span>:por, <span class="hljs-string">'PB'</span>:por, <span class="hljs-string">'AM'</span>:por, <span class="hljs-string">'RJ'</span>:por, <span class="hljs-string">'PA'</span>:por, <span class="hljs-string">'GO'</span>:por, 
+												<span class="hljs-string">'PI'</span>:por, <span class="hljs-string">'SE'</span>:por, <span class="hljs-string">'MS'</span>:por, <span class="hljs-string">'RO'</span>:por, <span class="hljs-string">'ES'</span>:por, <span class="hljs-string">'AL'</span>:por, 
+												<span class="hljs-string">'SC'</span>:por, <span class="hljs-string">'AC'</span>:por, <span class="hljs-string">'RR'</span>:por}, seed=<span class="hljs-number">1235</span>)</code></pre></div></div>
+<!-- END of codeblock 5 -->
+						<p>Depois de levar a cabo todo o processo de leitura e transformação dos dados com o Spark, foi escrito de volta os dados transformados em um único arquivo em formato parquet para depois ser manipulado pelo módulos estadísticos e de Machine Learning.</p>
+<!-- Codeblock 6-->
+<div class="code-toggle" id="code-toogle6" href="#bar" name="bar" onclick="toggle_visibility('code-on-6', 'code-toogle6');">▾ Mostrar código ▾</div>
+<div id="code-on-6" style="display: none; width: 100%; margin-top: -30px;">
+<div class="clipboard" tabindex="0" onclick="CopyToClipboard('code6'); fadeinout('copy-tooltip6')" title="Copy to clipboard"></div>
+<div class="code_block"><div class="copy-tooltip" id="copy-tooltip6">Copiado para prancheta</div>
+<pre><code class="language-python hljs" id="code6">df.write.options(header=<span class="hljs-string">'True'</span>, delimiter=<span class="hljs-string">';'</span>, compression=<span class="hljs-string">"none"</span>)\
+	.parquet(<span class="hljs-string">"file:///mnt/assets/data/enem_transformed_data"</span>)
+<span class="hljs-keyword">del</span> df</code></pre></div></div>
+<!-- END of codeblock 6 -->
+						<h>Carregamento e pré-processamento dos dados</h>
+						<p>Além dos microdados do ENEM transformados, foram carregados dados relacionados aos indicadores principais do Instituto Brasileiro de Geografia e Estatística (IBGE) por estado do Brasil para análise e dados geoespaciais (geojson) para os mapas cloropléticos.</p>
+						<p>Antes de proceder ao pré-processamento dos dados, os nomes das colunas referentes ao questionário sobre o aspecto socioeconômico, familiar, de educação e de trabalho dos participantes (Q001, Q002, ..., Q025) foram alterados para os nomes que melhor descrevem o teor dos dados.</p>
+						<p>Na primeira etapa de pré-processamento, as observações resultantes do questionário (com a exceção dos dados relacionados à questão 5) foram transformados em números ordinais. Por sua vez, a variável TP_SEXO foi transformada pela técnica de codificação One Hot.</p>
+						<p>Já na segunda e terceira etapa, as variáveis de interesse para o algoritmo de regressão foram selecionadas depois de uma análise descritiva dos dados.</p>
+<!-- Codeblock 7-->
+<div class="code-toggle" id="code-toogle7" href="#bar" name="bar" onclick="toggle_visibility('code-on-7', 'code-toogle7');">▾ Mostrar código ▾</div>
+<div id="code-on-7" style="display: none; width: 100%; margin-top: -30px;">
+<div class="clipboard" tabindex="0" onclick="CopyToClipboard('code7'); fadeinout('copy-tooltip7')" title="Copy to clipboard"></div>
+<div class="code_block"><div class="copy-tooltip" id="copy-tooltip7">Copiado para prancheta</div>
+<pre><code class="language-python hljs" id="code7"><span class="hljs-keyword">class</span> <span class="hljs-title class_">leitura_parquet</span>():
+	<span class="hljs-string">"""Define os objetos que irão auxiliar na leitura eficiente e processamento das partições dos 
+	dados em parquet."""</span>
+	<span class="hljs-keyword">def</span> __init__(self, diretorio):
+		self.parquet_files = [diretorio+i 
+								<span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> os.listdir(diretorio) 
+								<span class="hljs-keyword">if</span> i.endswith(<span class="hljs-string">".parquet"</span>)]
+		self.dtypes = {<span class="hljs-string">'NU_IDADE'</span>:<span class="hljs-string">'float16'</span>, <span class="hljs-string">'TP_SEXO'</span>:<span class="hljs-string">'category'</span>, <span class="hljs-string">'TP_ESTADO_CIVIL'</span>:<span class="hljs-string">'uint8'</span>,
+		<span class="hljs-string">'TP_COR_RACA'</span>:<span class="hljs-string">'uint8'</span>, <span class="hljs-string">'TP_NACIONALIDADE'</span>:<span class="hljs-string">'uint8'</span>, <span class="hljs-string">'TP_ST_CONCLUSAO'</span>:<span class="hljs-string">'uint8'</span>, <span class="hljs-string">'TP_ANO_CONCLUIU'</span>:<span class="hljs-string">'uint8'</span>, 
+		<span class="hljs-string">'TP_LINGUA'</span>:<span class="hljs-string">'uint8'</span>, <span class="hljs-string">'Q001'</span>:<span class="hljs-string">'category'</span>, <span class="hljs-string">'Q002'</span>:<span class="hljs-string">'category'</span>,<span class="hljs-string">'Q003'</span>:<span class="hljs-string">'category'</span>, <span class="hljs-string">'Q004'</span>:<span class="hljs-string">'category'</span>, 
+		<span class="hljs-string">'Q005'</span>:<span class="hljs-string">'uint32'</span>, <span class="hljs-string">'Q006'</span>:<span class="hljs-string">'category'</span>, <span class="hljs-string">'Q007'</span>:<span class="hljs-string">'category'</span>, <span class="hljs-string">'Q008'</span>:<span class="hljs-string">'category'</span>, <span class="hljs-string">'Q009'</span>:<span class="hljs-string">'category'</span>,
+		<span class="hljs-string">'Q010'</span>:<span class="hljs-string">'category'</span>, <span class="hljs-string">'Q011'</span>:<span class="hljs-string">'category'</span>, <span class="hljs-string">'Q012'</span>:<span class="hljs-string">'category'</span>, <span class="hljs-string">'Q013'</span>:<span class="hljs-string">'category'</span>, <span class="hljs-string">'Q014'</span>:<span class="hljs-string">'category'</span>, 
+		<span class="hljs-string">'Q015'</span>:<span class="hljs-string">'category'</span>, <span class="hljs-string">'Q016'</span>:<span class="hljs-string">'category'</span>, <span class="hljs-string">'Q017'</span>:<span class="hljs-string">'category'</span>, <span class="hljs-string">'Q018'</span>:<span class="hljs-string">'category'</span>,
+		<span class="hljs-string">'Q019'</span>:<span class="hljs-string">'category'</span>, <span class="hljs-string">'Q020'</span>:<span class="hljs-string">'category'</span>, <span class="hljs-string">'Q021'</span>:<span class="hljs-string">'category'</span>, <span class="hljs-string">'Q022'</span>:<span class="hljs-string">'category'</span>, <span class="hljs-string">'Q023'</span>:<span class="hljs-string">'category'</span>, 
+		<span class="hljs-string">'Q024'</span>:<span class="hljs-string">'category'</span>, <span class="hljs-string">'Q025'</span>:<span class="hljs-string">'category'</span>, <span class="hljs-string">'TP_RECURSO_ESPECIALIZADO'</span>:<span class="hljs-string">'uint8'</span>, <span class="hljs-string">'TP_MEDIA_NOTAS'</span>:<span class="hljs-string">'float16'</span>}
+		self.df = pd.DataFrame(columns=[<span class="hljs-string">'SG_UF_RESIDENCIA'</span>, <span class="hljs-string">'NU_IDADE'</span>, <span class="hljs-string">'TP_SEXO'</span>, <span class="hljs-string">'TP_ESTADO_CIVIL'</span>,
+		<span class="hljs-string">'TP_COR_RACA'</span>, <span class="hljs-string">'TP_NACIONALIDADE'</span>, <span class="hljs-string">'SG_UF_NASCIMENTO'</span>,
+		<span class="hljs-string">'TP_ST_CONCLUSAO'</span>, <span class="hljs-string">'TP_ANO_CONCLUIU'</span>, <span class="hljs-string">'SG_UF_PROVA'</span>, <span class="hljs-string">'TP_LINGUA'</span>,
+		<span class="hljs-string">'Q001'</span>, <span class="hljs-string">'Q002'</span>, <span class="hljs-string">'Q003'</span>, <span class="hljs-string">'Q004'</span>, <span class="hljs-string">'Q005'</span>, <span class="hljs-string">'Q006'</span>, <span class="hljs-string">'Q007'</span>, <span class="hljs-string">'Q008'</span>, <span class="hljs-string">'Q009'</span>,
+		<span class="hljs-string">'Q010'</span>, <span class="hljs-string">'Q011'</span>, <span class="hljs-string">'Q012'</span>, <span class="hljs-string">'Q013'</span>, <span class="hljs-string">'Q014'</span>, <span class="hljs-string">'Q015'</span>, <span class="hljs-string">'Q016'</span>, <span class="hljs-string">'Q017'</span>, <span class="hljs-string">'Q018'</span>,
+		<span class="hljs-string">'Q019'</span>, <span class="hljs-string">'Q020'</span>, <span class="hljs-string">'Q021'</span>, <span class="hljs-string">'Q022'</span>, <span class="hljs-string">'Q023'</span>, <span class="hljs-string">'Q024'</span>, <span class="hljs-string">'Q025'</span>,
+		<span class="hljs-string">'TP_RECURSO_ESPECIALIZADO'</span>, <span class="hljs-string">'TP_MEDIA_NOTAS'</span>])
+		self.df = self.df.astype(dtype=self.dtypes)
+	<span class="hljs-keyword">def</span> <span class="hljs-title function_">carregar</span>(<span class="hljs-params">self, index</span>):
+		<span class="hljs-string">"""Faz a leitura do parquet indicado pelo index dentro do diretório."""</span>
+		<span class="hljs-keyword">return</span> pd.read_parquet(self.parquet_files[index])
+	<span class="hljs-keyword">def</span> <span class="hljs-title function_">mudar_tipo</span>(<span class="hljs-params">self, df_temp</span>):
+		<span class="hljs-string">"""Faz a mudança do tipo de cada coluna de dados para um tipo mais leve e eficiente."""</span>
+		<span class="hljs-keyword">return</span> df_temp.astype(dtype=self.dtypes)
+	<span class="hljs-keyword">def</span> <span class="hljs-title function_">concatenar</span>(<span class="hljs-params">self, df_temp</span>):
+		<span class="hljs-string">"""Aplica o método concat para unir dos dataframes e retorna um novo dataframe"""</span>
+		self.df = pd.concat([self.df, df_temp])
+	<span class="hljs-keyword">def</span> __len__(self):
+		<span class="hljs-keyword">return</span> <span class="hljs-built_in">len</span>(self.parquet_files)
+
+<span class="hljs-comment"># Fazer a leitura das partições em parquet</span>
+parquet = leitura_parquet(<span class="hljs-string">'/mnt/assets/data/enem_transformed_data/'</span>)
+<span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> tqdm_notebook(<span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(parquet)), leave=<span class="hljs-literal">False</span>):
+	df_temp = parquet.carregar(i)
+	df_temp = parquet.mudar_tipo(df_temp)
+	parquet.concatenar(df_temp)
+	<span class="hljs-keyword">del</span> df_temp
+
+df = parquet.df
+<span class="hljs-keyword">del</span> parquet
+
+<span class="hljs-comment"># Importar dados do IBGE e aplicar uma série de transformações nos dados (ignorar mensagem de warning)</span>
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">normalizar_str</span>(<span class="hljs-params">string</span>):
+	<span class="hljs-string">"""Normalizar os dados do tipo string, eliminando símbolos e caracteres estranhos"""</span>
+	string = (string.replace(<span class="hljs-string">"acute;"</span>,<span class="hljs-string">""</span>).replace(<span class="hljs-string">"circ;"</span>,<span class="hljs-string">""</span>).replace(<span class="hljs-string">"cedil;"</span>,<span class="hljs-string">""</span>)
+				.replace(<span class="hljs-string">"tilde;"</span>,<span class="hljs-string">""</span>).replace(<span class="hljs-string">"&amp;"</span>, <span class="hljs-string">""</span>).replace(<span class="hljs-string">"sup2;"</span>,<span class="hljs-string">"2"</span>)
+				.replace(<span class="hljs-string">"lt;spangt;"</span>, <span class="hljs-string">" "</span>).replace(<span class="hljs-string">"lt;/spangt;"</span>, <span class="hljs-string">" "</span>).replace(<span class="hljs-string">"times;"</span>,<span class="hljs-string">"x"</span>))
+	<span class="hljs-keyword">return</span> string
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">transformar_uf</span>(<span class="hljs-params">uf</span>):
+	<span class="hljs-string">"""Tranformar os nomes dos estados em siglas UF"""</span>
+	uf_dict = {<span class="hljs-string">"Acre"</span>:<span class="hljs-string">"AC"</span>, <span class="hljs-string">"Alagoas"</span>:<span class="hljs-string">"AL"</span>, <span class="hljs-string">"Amapa"</span>:<span class="hljs-string">"AP"</span>, <span class="hljs-string">"Bahia"</span>:<span class="hljs-string">"BA"</span>, <span class="hljs-string">"Amazonas"</span>:<span class="hljs-string">"AM"</span>, <span class="hljs-string">"Ceara"</span>:<span class="hljs-string">"CE"</span>,
+				<span class="hljs-string">"Distrito Federal"</span>:<span class="hljs-string">"DF"</span>, <span class="hljs-string">"Espirito Santo"</span>:<span class="hljs-string">"ES"</span>,
+				<span class="hljs-string">"Goias"</span>:<span class="hljs-string">"GO"</span>, <span class="hljs-string">"Maranhao"</span>:<span class="hljs-string">"MA"</span>, <span class="hljs-string">"Mato Grosso"</span>:<span class="hljs-string">"MT"</span>, <span class="hljs-string">"Mato Grosso do Sul"</span>:<span class="hljs-string">"MS"</span>, 
+				<span class="hljs-string">"Minas Gerais"</span>:<span class="hljs-string">"MG"</span>, <span class="hljs-string">"Para"</span>:<span class="hljs-string">"PA"</span>, <span class="hljs-string">"Paraiba"</span>:<span class="hljs-string">"PB"</span>,
+				<span class="hljs-string">"Parana"</span>:<span class="hljs-string">"PR"</span>, <span class="hljs-string">"Pernambuco"</span>:<span class="hljs-string">"PE"</span>, <span class="hljs-string">"Piaui"</span>:<span class="hljs-string">"PI"</span>, <span class="hljs-string">"Rio de Janeiro"</span>:<span class="hljs-string">"RJ"</span>, 
+				<span class="hljs-string">"Rio Grande do Norte"</span>:<span class="hljs-string">"RN"</span>, <span class="hljs-string">"Rio Grande do Sul"</span>:<span class="hljs-string">"RS"</span>,
+				<span class="hljs-string">"Rondonia"</span>:<span class="hljs-string">"RO"</span>,<span class="hljs-string">"Roraima"</span>:<span class="hljs-string">"RR"</span>, <span class="hljs-string">"Santa Catarina"</span>:<span class="hljs-string">"SC"</span>, <span class="hljs-string">"Sao Paulo"</span>:<span class="hljs-string">"SP"</span>, 
+				<span class="hljs-string">"Sergipe"</span>:<span class="hljs-string">"SE"</span>, <span class="hljs-string">"Tocantins"</span>:<span class="hljs-string">"TO"</span>}
+	uf = uf_dict[uf]
+	<span class="hljs-keyword">return</span> uf
+
+dados_ibge = pd.read_csv(<span class="hljs-string">"/mnt/assets/data/6f2560506cccdf1d3f9b2ef7783803f3.csv"</span>, error_bad_lines=<span class="hljs-literal">False</span>, skiprows=<span class="hljs-number">1</span>)
+dados_ibge.columns = [normalizar_str(string) <span class="hljs-keyword">for</span> string <span class="hljs-keyword">in</span> dados_ibge.columns]
+dados_ibge.drop(<span class="hljs-string">"Unnamed: 14"</span>, axis=<span class="hljs-number">1</span>, inplace=<span class="hljs-literal">True</span>)
+dados_ibge.iloc[:,:<span class="hljs-number">5</span>] = dados_ibge.iloc[:,:<span class="hljs-number">5</span>].astype(<span class="hljs-string">'str'</span>).applymap(normalizar_str)
+dados_ibge[<span class="hljs-string">"UF [-]"</span>] = dados_ibge[<span class="hljs-string">"UF [-]"</span>].apply(transformar_uf)
+
+<span class="hljs-comment"># Apontar à localização do arquivo geojson dos municipios brasileiros</span>
+state_geo = <span class="hljs-string">'/mnt/assets/data/br_states.json'</span>
+
+<span class="hljs-comment"># Renomear algumas das colunas</span>
+df.columns = [<span class="hljs-string">"SG_UF_RESIDENCIA"</span>, <span class="hljs-string">"TP_IDADE"</span>, <span class="hljs-string">"TP_SEXO"</span>, <span class="hljs-string">"TP_ESTADO_CIVIL"</span>,
+				<span class="hljs-string">"TP_COR_RACA"</span>, <span class="hljs-string">"TP_NACIONALIDADE"</span>, <span class="hljs-string">"SG_UF_NASCIMENTO"</span>,
+				<span class="hljs-string">"TP_ST_CONCLUSAO"</span>, <span class="hljs-string">"TP_ANO_CONCLUIU"</span>, <span class="hljs-string">"SG_UF_PROVA"</span>, <span class="hljs-string">"TP_LINGUA"</span>,
+				<span class="hljs-string">"Q_ESTUDO_PAI"</span>, <span class="hljs-string">"Q_ESTUDO_MAE"</span>, <span class="hljs-string">"Q_OCUPACAO_PAI"</span>, <span class="hljs-string">"Q_OCUPACAO_MAE"</span>, <span class="hljs-string">"Q_RESIDENTES_PROXIMOS"</span>,
+				<span class="hljs-string">"Q_NIVEL_RENDA_MENSAL"</span>, <span class="hljs-string">"Q_FREQ_EMPREGADO_DOMESTICO"</span>, <span class="hljs-string">"Q_QTD_BANHEIRO"</span>, <span class="hljs-string">"Q_QTD_QUARTOS"</span>,
+				<span class="hljs-string">"Q_QTD_CARROS"</span>, <span class="hljs-string">"Q_QTD_MOTO"</span>, <span class="hljs-string">"Q_QTD_GELADEIRA"</span>, <span class="hljs-string">"Q_QTD_FREEZER"</span>, <span class="hljs-string">"Q_QTD_MAQ_LAVAR"</span>,
+				<span class="hljs-string">"Q_QTD_MAQ_SECAR"</span>, <span class="hljs-string">"Q_QTD_MICROONDAS"</span>, <span class="hljs-string">"Q_QTD_MAQ_LOUCA"</span>, <span class="hljs-string">"Q_QTD_ASPIRADOR"</span>, 
+				<span class="hljs-string">"Q_QTD_TELEVISAO"</span>, <span class="hljs-string">"Q_QTD_APARELHO_DVD"</span>, <span class="hljs-string">"Q_QTD_TV_ASSINATURA"</span>, <span class="hljs-string">"Q_QTD_CELULAR"</span>, 
+				<span class="hljs-string">"Q_QTD_TELF_FIXO"</span>, <span class="hljs-string">"Q_QTD_COMPUTADOR"</span>, <span class="hljs-string">"Q_ACESSO_INTERNET"</span>, <span class="hljs-string">"TP_RECURSO_ESPECIALIZADO"</span>,
+				<span class="hljs-string">"TP_MEDIA_NOTAS"</span>]
+</code></pre></div></div>
+<!-- END of codeblock 7 -->
+
+						<h4>Codificação</h4>
+						<p>Os valores dos atributos categóricos do tipo texto (com a exceção das variáveis relacionadas à região geográfica) foram transformados em números inteiros.</p>
+<!-- Codeblock 8-->
+<div class="code-toggle" id="code-toogle8" href="#bar" name="bar" onclick="toggle_visibility('code-on-8', 'code-toogle8');">▾ Mostrar código ▾</div>
+<div id="code-on-8" style="display: none; width: 100%; margin-top: -30px;">
+<div class="clipboard" tabindex="0" onclick="CopyToClipboard('code8'); fadeinout('copy-tooltip8')" title="Copy to clipboard"></div>
+<div class="code_block"><div class="copy-tooltip" id="copy-tooltip8">Copiado para prancheta</div>
+<pre><code class="language-python hljs" id="code8"><span class="hljs-comment"># Aplicar a codificação ordinal para a variáveis categóricas ordinais do tipo texto</span>
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">codificar_abc</span>(<span class="hljs-params">abc</span>):
+	abc_dict={<span class="hljs-string">"A"</span>:<span class="hljs-number">0</span>,<span class="hljs-string">"B"</span>:<span class="hljs-number">1</span>,<span class="hljs-string">"C"</span>:<span class="hljs-number">2</span>,<span class="hljs-string">"D"</span>:<span class="hljs-number">3</span>,<span class="hljs-string">"E"</span>:<span class="hljs-number">4</span>,<span class="hljs-string">"F"</span>:<span class="hljs-number">5</span>,<span class="hljs-string">"G"</span>:<span class="hljs-number">6</span>, <span class="hljs-string">"H"</span>:<span class="hljs-number">7</span>, <span class="hljs-string">"I"</span>:<span class="hljs-number">8</span>, <span class="hljs-string">"J"</span>:<span class="hljs-number">9</span>, <span class="hljs-string">"K"</span>:<span class="hljs-number">10</span>, <span class="hljs-string">"L"</span>:<span class="hljs-number">11</span>,
+				<span class="hljs-string">"M"</span>:<span class="hljs-number">12</span>, <span class="hljs-string">"N"</span>:<span class="hljs-number">13</span>, <span class="hljs-string">"O"</span>:<span class="hljs-number">14</span>, <span class="hljs-string">"P"</span>:<span class="hljs-number">15</span>, <span class="hljs-string">"Q"</span>:<span class="hljs-number">16</span>}
+	abc = abc_dict[abc]
+	<span class="hljs-keyword">return</span> abc
+
+abc_cols = [<span class="hljs-string">"Q_ESTUDO_PAI"</span>, <span class="hljs-string">"Q_ESTUDO_MAE"</span>, <span class="hljs-string">"Q_OCUPACAO_PAI"</span>, <span class="hljs-string">"Q_OCUPACAO_MAE"</span>,
+				<span class="hljs-string">"Q_NIVEL_RENDA_MENSAL"</span>, <span class="hljs-string">"Q_FREQ_EMPREGADO_DOMESTICO"</span>, <span class="hljs-string">"Q_QTD_BANHEIRO"</span>, <span class="hljs-string">"Q_QTD_QUARTOS"</span>,
+				<span class="hljs-string">"Q_QTD_CARROS"</span>, <span class="hljs-string">"Q_QTD_MOTO"</span>, <span class="hljs-string">"Q_QTD_GELADEIRA"</span>, <span class="hljs-string">"Q_QTD_FREEZER"</span>, <span class="hljs-string">"Q_QTD_MAQ_LAVAR"</span>,
+				<span class="hljs-string">"Q_QTD_MAQ_SECAR"</span>, <span class="hljs-string">"Q_QTD_MICROONDAS"</span>, <span class="hljs-string">"Q_QTD_MAQ_LOUCA"</span>, <span class="hljs-string">"Q_QTD_ASPIRADOR"</span>, 
+				<span class="hljs-string">"Q_QTD_TELEVISAO"</span>, <span class="hljs-string">"Q_QTD_APARELHO_DVD"</span>, <span class="hljs-string">"Q_QTD_TV_ASSINATURA"</span>, <span class="hljs-string">"Q_QTD_CELULAR"</span>, 
+				<span class="hljs-string">"Q_QTD_TELF_FIXO"</span>, <span class="hljs-string">"Q_QTD_COMPUTADOR"</span>, <span class="hljs-string">"Q_ACESSO_INTERNET"</span>]
+
+df.loc[:,abc_cols] = df.loc[:,abc_cols].applymap(codificar_abc).astype(<span class="hljs-string">'uint8'</span>)
+
+<span class="hljs-comment"># Aplicar a codificação one hot para a variáveis categóricas nominais do tipo texto</span>
+df[[<span class="hljs-string">"F"</span>,<span class="hljs-string">"M"</span>]] = df[<span class="hljs-string">"TP_SEXO"</span>].<span class="hljs-built_in">str</span>.get_dummies().astype(<span class="hljs-string">'uint8'</span>)
+df.drop(<span class="hljs-string">"TP_SEXO"</span>, axis=<span class="hljs-number">1</span>, inplace=<span class="hljs-literal">True</span>)</code></pre></div></div>
+<!-- END of codeblock 8 -->
+
+						<h4>Seleção de atributos (feature selection)</h4>
+						<p>A correlação entre as variáveis de interesse foi analizada mediante um mapa de calor. Primeiramente, foi analisado a correlação entre as variáveis independentes para encontrar algum indicio de colinearidade. A gravidade da multicolinearidade foi avaliada mediante o Fator de Inflação de Variância (VIF). A variável NU_IDADE foi excluida tras constatar que presentava uma elevada correlação positiva com TP_ANO_CONCLUIU (os que concluíram o ensino médio mais cedo têm uma idade menor e vice-versa) e um elevado VIF. Também foi excluida a variável TP_ST_CONCLUSAO por estar muito correlacionada com TP_RECURSO_ESPECIALIZADO.</p>
+<!-- Codeblock 9-->
+<div class="code-toggle" id="code-toogle9" href="#bar" name="bar" onclick="toggle_visibility('code-on-9', 'code-toogle9');">▾ Mostrar código ▾</div>
+<div id="code-on-9" style="display: none; width: 100%; margin-top: -30px;">
+<div class="clipboard" tabindex="0" onclick="CopyToClipboard('code9'); fadeinout('copy-tooltip9')" title="Copy to clipboard"></div>
+<div class="code_block"><div class="copy-tooltip" id="copy-tooltip9">Copiado para prancheta</div>
+<pre><code class="language-python hljs" id="code9"><span class="hljs-comment"># Selecionar variáveis numéricas</span>
+numeric_features = df[[df.columns[i] <span class="hljs-keyword">for</span> i,t <span class="hljs-keyword">in</span> <span class="hljs-built_in">enumerate</span>(df.dtypes) <span class="hljs-keyword">if</span> t != <span class="hljs-string">'O'</span>]]
+
+<span class="hljs-comment"># Graficar mapa de calor</span>
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">heat_map</span>(<span class="hljs-params">df</span>):
+	<span class="hljs-string">"""Grafica um mapa de calor do dataframe"""</span>
+	mask = np.zeros_like(df, dtype=np.<span class="hljs-built_in">bool</span>)
+	mask[np.triu_indices_from(mask)] = <span class="hljs-literal">True</span>
+	cmap = sns.color_palette(<span class="hljs-string">"icefire"</span>, n_colors=<span class="hljs-number">200</span>)
+	sns.heatmap(df, mask=mask,annot=<span class="hljs-literal">False</span>, cmap=cmap, xticklabels=<span class="hljs-literal">True</span>, yticklabels=<span class="hljs-literal">True</span>);
+	fig = plt.gcf()
+	fig.set_size_inches(<span class="hljs-number">15</span>, <span class="hljs-number">10</span>)
+
+df_corr = numeric_features.corr()
+heat_map(df_corr)</code></pre></div></div>
+<!-- END of codeblock 9 -->
+						<img src="/assets/images/1.png"><div class="legend">Imagem 1 - Mapa de calor das correlações entre as variáveis numéricas</div>
+	
+<!-- Codeblock 10-->
+<div class="code-toggle" id="code-toogle10" href="#bar" name="bar" onclick="toggle_visibility('code-on-10', 'code-toogle10');">▾ Mostrar código ▾</div>
+<div id="code-on-10" style="display:none; width: 100%; margin-top: -30px;">
+<div class="clipboard" tabindex="0" onclick="CopyToClipboard('code10'); fadeinout('copy-tooltip10')" title="Copy to clipboard"></div>
+<div class="code_block"><div class="copy-tooltip" id="copy-tooltip10">Copiado para prancheta</div>
+<pre><code class="language-python hljs" id="code10"><span class="hljs-comment"># Determinar o Fator de Inflação da Variância</span>
+variables = df.loc[:,[<span class="hljs-string">"TP_ANO_CONCLUIU"</span>, <span class="hljs-string">"TP_IDADE"</span>, <span class="hljs-string">"TP_ST_CONCLUSAO"</span>, <span class="hljs-string">"TP_RECURSO_ESPECIALIZADO"</span>, 
+						<span class="hljs-string">"Q_NIVEL_RENDA_MENSAL"</span>]]
+variables[<span class="hljs-string">"TP_IDADE"</span>] = variables[<span class="hljs-string">"TP_IDADE"</span>].astype(<span class="hljs-string">"float64"</span>)
+variables = variables.dropna()
+vif = pd.DataFrame()
+vif[<span class="hljs-string">"VIF"</span>] = [variance_inflation_factor(variables.values, i) <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(variables.shape[<span class="hljs-number">1</span>])]
+vif[<span class="hljs-string">"Features"</span>] = variables.columns
+vif</code></pre></div></div>
+<!-- END of codeblock 10 -->
+<div class="table-block"><table class="dataframe" border="1"><thead>  <tr><th></th><th>VIF</th><th>Features</th>  </tr></thead><tbody>  <tr><th>0</th><td>4.503865</td><td>TP_ANO_CONCLUIU</td>  </tr>  <tr><th>1</th><td>14.426394</td><td>TP_IDADE</td>  </tr>  <tr><th>2</th><td>11.749482</td><td>TP_ST_CONCLUSAO</td>  </tr>  <tr><th>3</th><td>2.491262</td><td>TP_RECURSO_ESPECIALIZADO</td>  </tr>  <tr><th>4</th><td>2.193918</td><td>Q_NIVEL_RENDA_MENSAL</td></tr></tbody></table></div><div class="legend">Tabela 2 - Fator de Inflação da Variância (VIF) das variáveis</div>
+			
+<!-- Codeblock 11-->
+<div class="code-toggle" id="code-toogle11" href="#bar" name="bar" onclick="toggle_visibility('code-on-11', 'code-toogle11');">▾ Mostrar código ▾</div>
+<div id="code-on-11" style="display:none; width: 100%; margin-top: -30px;">
+<div class="clipboard" tabindex="0" onclick="CopyToClipboard('code11'); fadeinout('copy-tooltip11')" title="Copy to clipboard"></div>
+<div class="code_block"><div class="copy-tooltip" id="copy-tooltip11">Copiado para prancheta</div>
+<pre><code class="language-python hljs" id="code11"><span class="hljs-comment"># Excluir as colunas com indicios de multicolinearidade</span>
+df = df.drop([<span class="hljs-string">"TP_IDADE"</span>,<span class="hljs-string">"TP_ST_CONCLUSAO"</span>], axis=<span class="hljs-number">1</span>)
+<span class="hljs-keyword">del</span> variables</code></pre></div></div>
+<!-- END of codeblock 11 -->
+						<p>Também foi validado se todas as variáveis foram necessarias para a análise mediante um modelo de regressão com o método de ordinary least squares (OLS). Ambos R ao quadrado e R ao quadrado ajustado do modelo mostraram um mesmo valor, indicando que nenhuma variável em particular afetou negativamente na precisão do modelo. Os valores do teste de t de Student mostraram que, ao nível de significância de um 5%, as variáveis referentes ao sexo e número de quartos no domicilio do participante não tinham algum poder preditivo, razão pela qual estas foram excluídas da análise.</p>
+
+<!-- Codeblock 12-->
+<div class="code-toggle" id="code-toogle12" href="#bar" name="bar" onclick="toggle_visibility('code-on-12', 'code-toogle12');">▾ Mostrar código ▾</div>
+<div id="code-on-12" style="display:none; width: 100%; margin-top: -30px;">
+<div class="clipboard" tabindex="0" onclick="CopyToClipboard('code12'); fadeinout('copy-tooltip12')" title="Copy to clipboard"></div>
+<div class="code_block"><div class="copy-tooltip" id="copy-tooltip12">Copiado para prancheta</div>
+<pre><code class="language-python hljs" id="code12"><span class="hljs-comment"># Geração de modelo de regressão com OLS</span>
+x = numeric_features.drop([<span class="hljs-string">"TP_MEDIA_NOTAS"</span>, <span class="hljs-string">"TP_IDADE"</span>,<span class="hljs-string">"TP_ST_CONCLUSAO"</span>], axis=<span class="hljs-number">1</span>).astype(<span class="hljs-string">"int64"</span>)
+y = numeric_features[<span class="hljs-string">"TP_MEDIA_NOTAS"</span>].astype(<span class="hljs-string">"float64"</span>)
+x = sn.add_constant(x)
+model = sn.OLS(y,x).fit()
+model.summary()</code></pre></div></div>
+<!-- END of codeblock 12 -->
+<div class="table-block"><table class="simpletable"><tbody><tr><th>Dep. Variable:</th>     <td>TP_MEDIA_NOTAS</td>  <th>  R-squared:         </th>  <td>   0.323</td>    </tr>  <tr><th>Model:</th>                   <td>OLS</td>       <th>  Adj. R-squared:    </th>  <td>   0.323</td>    </tr>  <tr><th>Method:</th>             <td>Least Squares</td>  <th>  F-statistic:       </th>  <td>1.566e+04</td>   </tr>  <tr><th>Date:</th>             <td>Wed, 08 Dec 2021</td> <th>  Prob (F-statistic):</th>   <td>  0.00</td>     </tr>  <tr><th>Time:</th>                 <td>22:26:13</td>     <th>  Log-Likelihood:    </th> <td>-6.0501e+06</td>  </tr>  <tr><th>No. Observations:</th>      <td>1080727</td>     <th>  AIC:               </th>  <td>1.210e+07</td>   </tr>  <tr><th>Df Residuals:</th>          <td>1080693</td>     <th>  BIC:               </th>  <td>1.210e+07</td>   </tr>  <tr><th>Df Model:</th>              <td>    33</td>      <th>                     </th>      <td> </td>       </tr>  <tr><th>Covariance Type:</th>      <td>nonrobust</td>    <th>                     </th>      <td> </td>       </tr>  </tbody></table></div><div class="legend">Tabela 3 - Resultados do modelo de regressão com OLS</div>
+<div class="table-block"><table class="simpletable"><tbody><tr>   <td></td>                 <th>coef</th>     <th>std err</th>      <th>t</th>      <th>P&gt;|t|</th>  <th>[0.025</th>    <th>0.975]</th>  </tr><tr>  <th>const</th>                      <td>-4.495e+10</td> <td> 4.43e+10</td> <td>   -1.015</td> <td> 0.310</td> <td>-1.32e+11</td> <td> 4.19e+10</td></tr><tr>  <th>TP_ESTADO_CIVIL</th>            <td>   -8.1804</td> <td>    0.167</td> <td>  -48.938</td> <td> 0.000</td> <td>   -8.508</td> <td>   -7.853</td></tr><tr>  <th>TP_COR_RACA</th>                <td>   -3.6974</td> <td>    0.066</td> <td>  -56.333</td> <td> 0.000</td> <td>   -3.826</td> <td>   -3.569</td></tr><tr>  <th>TP_NACIONALIDADE</th>           <td>   -9.4623</td> <td>    0.297</td> <td>  -31.899</td> <td> 0.000</td> <td>  -10.044</td> <td>   -8.881</td></tr><tr>  <th>TP_ANO_CONCLUIU</th>            <td>    0.6768</td> <td>    0.019</td> <td>   36.425</td> <td> 0.000</td> <td>    0.640</td> <td>    0.713</td></tr><tr>  <th>TP_LINGUA</th>                  <td>  -20.6907</td> <td>    0.135</td> <td> -153.140</td> <td> 0.000</td> <td>  -20.956</td> <td>  -20.426</td></tr><tr>  <th>Q_ESTUDO_PAI</th>               <td>    1.0814</td> <td>    0.042</td> <td>   25.940</td> <td> 0.000</td> <td>    1.000</td> <td>    1.163</td></tr><tr>  <th>Q_ESTUDO_MAE</th>               <td>    4.1052</td> <td>    0.048</td> <td>   85.122</td> <td> 0.000</td> <td>    4.011</td> <td>    4.200</td></tr><tr>  <th>Q_OCUPACAO_PAI</th>             <td>    0.4908</td> <td>    0.051</td> <td>    9.573</td> <td> 0.000</td> <td>    0.390</td> <td>    0.591</td></tr><tr>  <th>Q_OCUPACAO_MAE</th>             <td>    0.7229</td> <td>    0.053</td> <td>   13.651</td> <td> 0.000</td> <td>    0.619</td> <td>    0.827</td></tr><tr>  <th>Q_RESIDENTES_PROXIMOS</th>      <td>   -4.1098</td> <td>    0.049</td> <td>  -84.577</td> <td> 0.000</td> <td>   -4.205</td> <td>   -4.015</td></tr><tr>  <th>Q_NIVEL_RENDA_MENSAL</th>       <td>    5.9086</td> <td>    0.029</td> <td>  202.482</td> <td> 0.000</td> <td>    5.851</td> <td>    5.966</td></tr><tr>  <th>Q_FREQ_EMPREGADO_DOMESTICO</th> <td>   -1.9210</td> <td>    0.130</td> <td>  -14.788</td> <td> 0.000</td> <td>   -2.176</td> <td>   -1.666</td></tr><tr>  <th>Q_QTD_BANHEIRO</th>             <td>    7.2966</td> <td>    0.124</td> <td>   58.686</td> <td> 0.000</td> <td>    7.053</td> <td>    7.540</td></tr><tr>  <th>Q_QTD_QUARTOS</th>              <td>    0.0079</td> <td>    0.106</td> <td>    0.075</td> <td> 0.940</td> <td>   -0.199</td> <td>    0.215</td></tr><tr>  <th>Q_QTD_CARROS</th>               <td>    0.7714</td> <td>    0.124</td> <td>    6.222</td> <td> 0.000</td> <td>    0.528</td> <td>    1.014</td></tr><tr>  <th>Q_QTD_MOTO</th>                 <td>   -4.7075</td> <td>    0.130</td> <td>  -36.195</td> <td> 0.000</td> <td>   -4.962</td> <td>   -4.453</td></tr><tr>  <th>Q_QTD_GELADEIRA</th>            <td>   -8.6229</td> <td>    0.253</td> <td>  -34.055</td> <td> 0.000</td> <td>   -9.119</td> <td>   -8.127</td></tr><tr>  <th>Q_QTD_FREEZER</th>              <td>    7.0805</td> <td>    0.134</td> <td>   52.687</td> <td> 0.000</td> <td>    6.817</td> <td>    7.344</td></tr><tr>  <th>Q_QTD_MAQ_LAVAR</th>            <td>   -3.6906</td> <td>    0.155</td> <td>  -23.818</td> <td> 0.000</td> <td>   -3.994</td> <td>   -3.387</td></tr><tr>  <th>Q_QTD_MAQ_SECAR</th>            <td>   -6.2245</td> <td>    0.204</td> <td>  -30.468</td> <td> 0.000</td> <td>   -6.625</td> <td>   -5.824</td></tr><tr>  <th>Q_QTD_MICROONDAS</th>           <td>    0.8174</td> <td>    0.152</td> <td>    5.379</td> <td> 0.000</td> <td>    0.520</td> <td>    1.115</td></tr><tr>  <th>Q_QTD_MAQ_LOUCA</th>            <td>   -3.3036</td> <td>    0.394</td> <td>   -8.384</td> <td> 0.000</td> <td>   -4.076</td> <td>   -2.531</td></tr><tr>  <th>Q_QTD_ASPIRADOR</th>            <td>    1.0492</td> <td>    0.193</td> <td>    5.443</td> <td> 0.000</td> <td>    0.671</td> <td>    1.427</td></tr><tr>  <th>Q_QTD_TELEVISAO</th>            <td>   -1.4060</td> <td>    0.109</td> <td>  -12.928</td> <td> 0.000</td> <td>   -1.619</td> <td>   -1.193</td></tr><tr>  <th>Q_QTD_APARELHO_DVD</th>         <td>   -1.6844</td> <td>    0.143</td> <td>  -11.808</td> <td> 0.000</td> <td>   -1.964</td> <td>   -1.405</td></tr><tr>  <th>Q_QTD_TV_ASSINATURA</th>        <td>   -3.1128</td> <td>    0.177</td> <td>  -17.606</td> <td> 0.000</td> <td>   -3.459</td> <td>   -2.766</td></tr><tr>  <th>Q_QTD_CELULAR</th>              <td>    3.2213</td> <td>    0.077</td> <td>   42.045</td> <td> 0.000</td> <td>    3.071</td> <td>    3.371</td></tr><tr>  <th>Q_QTD_TELF_FIXO</th>            <td>    1.9619</td> <td>    0.165</td> <td>   11.861</td> <td> 0.000</td> <td>    1.638</td> <td>    2.286</td></tr><tr>  <th>Q_QTD_COMPUTADOR</th>           <td>   12.6716</td> <td>    0.106</td> <td>  119.242</td> <td> 0.000</td> <td>   12.463</td> <td>   12.880</td></tr><tr>  <th>Q_ACESSO_INTERNET</th>          <td>    7.4981</td> <td>    0.181</td> <td>   41.384</td> <td> 0.000</td> <td>    7.143</td> <td>    7.853</td></tr><tr>  <th>TP_RECURSO_ESPECIALIZADO</th>   <td>  -17.6411</td> <td>    0.187</td> <td>  -94.109</td> <td> 0.000</td> <td>  -18.008</td> <td>  -17.274</td></tr><tr>  <th>F</th>                          <td> 4.495e+10</td> <td> 4.43e+10</td> <td>    1.015</td> <td> 0.310</td> <td>-4.19e+10</td> <td> 1.32e+11</td></tr><tr>  <th>M</th>                          <td> 4.495e+10</td> <td> 4.43e+10</td> <td>    1.015</td> <td> 0.310</td> <td>-4.19e+10</td> <td> 1.32e+11</td></tr></tbody></table></div><div class="legend">Tabela 4 - Coeficientes e testes do modelo de regressão com OLS</div>
+<div class="table-block"><table class="simpletable"><tbody><tr>  <th>Omnibus:</th>       <td>8213.052</td> <th>  Durbin-Watson:     </th> <td>   1.977</td></tr><tr>  <th>Prob(Omnibus):</th>  <td> 0.000</td>  <th>  Jarque-Bera (JB):  </th> <td>8416.640</td></tr><tr>  <th>Skew:</th>           <td> 0.212</td>  <th>  Prob(JB):          </th> <td>    0.00</td></tr><tr>  <th>Kurtosis:</th>       <td> 3.089</td>  <th>  Cond. No.          </th> <td>1.23e+13</td></tr></tbody></table></div>
+<div class="legend">Tabela 5 - Outros resultados do modelo de regressão com OLS</div>
+
+						<h>Resultados</h>
+						<h4>Notas por região geográfica</h4>
+						<p>Ao visualizar as médias de notas por estado e região de residência dos participantes, se nota que a região geográfica da prova influenciou nas notas do ENEM 2019. Os participantes que fizeram as provas nos estados das regiões sul e sudeste (com a grande exceção dos participantes no Distrito Federal) tiveram em média melhores notas que os estudantes que participaram das provas em outros estados, assim dando a conhecer uma disparidade nos rendimentos de cada região.</p>
+
+						<p>Tal disparidade poderia ser explicada ao visualizar as médias de renda dos participantes e o IDH (Censo Demográfico de 2010) por estado, já que o comportamento dessas variáveis são similares ao das notas, com as regiões Sul e Sudeste tendo no geral os índices mais elevados que o resto do país (novamente, excetuando o Distrito Federal).</p>
+					
+<!-- Codeblock 13-->
+<div class="code-toggle" id="code-toogle13" href="#bar" name="bar" onclick="toggle_visibility('code-on-13', 'code-toogle13');">▾ Mostrar código ▾</div>
+<div id="code-on-13" style="display:none; width: 100%; margin-top: -30px;">
+<div class="clipboard" tabindex="0" onclick="CopyToClipboard('code13'); fadeinout('copy-tooltip13')" title="Copy to clipboard"></div>
+<div class="code_block"><div class="copy-tooltip" id="copy-tooltip13">Copiado para prancheta</div>
+<pre><code class="language-python hljs" id="code13"><span class="hljs-comment"># Graficar as médias de notas por estado</span>
+
+notas_por_uf = df.groupby(by=<span class="hljs-string">"SG_UF_PROVA"</span>)[<span class="hljs-string">'SG_UF_PROVA'</span>,<span class="hljs-string">"TP_MEDIA_NOTAS"</span>].mean().reset_index()
+
+mapa = folium.Map(
+	location=[-<span class="hljs-number">15.77972</span>, -<span class="hljs-number">47.92972</span>],
+	zoom_start=<span class="hljs-number">3</span>
+)
+
+folium.Choropleth(
+	geo_data=state_geo,
+	name=<span class="hljs-string">'Média de notas por estado'</span>,
+	data=notas_por_uf,
+	columns=[<span class="hljs-string">'SG_UF_PROVA'</span>,<span class="hljs-string">'TP_MEDIA_NOTAS'</span>],
+	key_on=<span class="hljs-string">'feature.id'</span>,
+	fill_color=<span class="hljs-string">'YlGn'</span>,
+	fill_opacity=<span class="hljs-number">1</span>,
+	line_opacity=<span class="hljs-number">0.1</span>,
+	legend_name=<span class="hljs-string">'Média de notas'</span>
+).add_to(mapa)
+
+mapa</code></pre></div></div>
+<!-- END of codeblock 13 -->
+
+						<img src="/assets/images/2.png"><div class="legend">Imagem 2 - Mapa das médias de notas por estado</div>
+
+<!-- Codeblock 14-->
+<div class="code-toggle" id="code-toogle14" href="#bar" name="bar" onclick="toggle_visibility('code-on-14', 'code-toogle14');">▾ Mostrar código ▾</div>
+<div id="code-on-14" style="display:none; width: 100%; margin-top: -30px;">
+<div class="clipboard" tabindex="0" onclick="CopyToClipboard('code14'); fadeinout('copy-tooltip14')" title="Copy to clipboard"></div>
+<div class="code_block"><div class="copy-tooltip" id="copy-tooltip14">Copiado para prancheta</div>
+<pre><code class="language-python hljs" id="code14"><span class="hljs-comment"># Graficar a média de renta mensal dos participantes por estado</span>
+
+renda_por_uf = df.groupby(by=<span class="hljs-string">"SG_UF_PROVA"</span>)[<span class="hljs-string">'SG_UF_PROVA'</span>,<span class="hljs-string">"Q_NIVEL_RENDA_MENSAL"</span>].mean().reset_index()
+
+mapa = folium.Map(
+	location=[-<span class="hljs-number">15.77972</span>, -<span class="hljs-number">47.92972</span>],
+	zoom_start=<span class="hljs-number">3</span>
+)
+
+folium.Choropleth(
+	geo_data=state_geo,
+	name=<span class="hljs-string">'Nivel da média de renda por estado'</span>,
+	data=renda_por_uf,
+	columns=[<span class="hljs-string">'SG_UF_PROVA'</span>,<span class="hljs-string">'Q_NIVEL_RENDA_MENSAL'</span>],
+	key_on=<span class="hljs-string">'feature.id'</span>,
+	fill_color=<span class="hljs-string">'YlOrBr'</span>,
+	fill_opacity=<span class="hljs-number">1</span>,
+	line_opacity=<span class="hljs-number">0.1</span>,
+	legend_name=<span class="hljs-string">'Nivel da média de renda mensal (1 ao 6)'</span>
+).add_to(mapa)
+
+mapa</code></pre></div></div>
+<!-- END of codeblock 14 -->
+						<img src="/assets/images/3.png"><div class="legend">Imagem 3 - Mapa das rendas médias mensuais por estado</div>
+
+<!-- Codeblock 15-->
+<div class="code-toggle" id="code-toogle15" href="#bar" name="bar" onclick="toggle_visibility('code-on-15', 'code-toogle15');">▾ Mostrar código ▾</div>
+<div id="code-on-15" style="display:none; width: 100%; margin-top: -30px;">
+<div class="clipboard" tabindex="0" onclick="CopyToClipboard('code15'); fadeinout('copy-tooltip15')" title="Copy to clipboard"></div>
+<div class="code_block"><div class="copy-tooltip" id="copy-tooltip15">Copiado para prancheta</div>
+<pre><code class="language-python hljs" id="code15"><span class="hljs-comment"># Graficar o índice de IDH por estado</span>
+
+mapa = folium.Map(
+	location=[-<span class="hljs-number">15.77972</span>, -<span class="hljs-number">47.92972</span>],
+	zoom_start=<span class="hljs-number">3</span>
+)
+
+folium.Choropleth(
+	geo_data=state_geo,
+	name=<span class="hljs-string">'IDH por estado'</span>,
+	data=dados_ibge,
+	columns=[<span class="hljs-string">'UF [-]'</span>,<span class="hljs-string">'IDH  Índice de desenvolvimento humano  [2010]'</span>],
+	key_on=<span class="hljs-string">'feature.id'</span>,
+	fill_color=<span class="hljs-string">'YlOrBr'</span>,
+	fill_opacity=<span class="hljs-number">1</span>,
+	line_opacity=<span class="hljs-number">0.1</span>,
+	legend_name=<span class="hljs-string">'IDH'</span>
+).add_to(mapa)
+
+mapa</code></pre></div></div>
+<!-- END of codeblock 15 -->
+
+						<img src="/assets/images/4.png"><div class="legend">Imagem 4 - Mapa dos índices de IDH por estado</div>
+
+						<p>Ao visualizar a dispersão das notas, se nota a simple vista que os participantes destacados (com notas de 700 ou mais) dos estados de Ceará e Goiás são proporcionalmente comparáveis ou superiores aos estados com maiores médias de notas no país, apesar das mencionadas regiões terem médias de notas inferiores no geral. Isso foi validado ao comparar com detalhe a distribuição das notas médias das provas nesses respectivos estados versus nos estados com melhores médias de notas. Também se infere que os estados do Acre, Amazonas, Rondônia e Amapá tiveram a menor proporção de participantes destacados em comparação com os demais estados do país.</p>
+
+<!-- Codeblock 16-->
+<div class="code-toggle" id="code-toogle16" href="#bar" name="bar" onclick="toggle_visibility('code-on-16', 'code-toogle16');">▾ Mostrar código ▾</div>
+<div id="code-on-16" style="display:none; width: 100%; margin-top: -30px;">
+<div class="clipboard" tabindex="0" onclick="CopyToClipboard('code16'); fadeinout('copy-tooltip16')" title="Copy to clipboard"></div>
+<div class="code_block"><div class="copy-tooltip" id="copy-tooltip16">Copiado para prancheta</div>
+<pre><code class="language-python hljs" id="code16"><span class="hljs-comment"># Graficar as dispersões de notas por estado</span>
+
+notas_por_uf_std = df.groupby(by=<span class="hljs-string">"SG_UF_PROVA"</span>)[<span class="hljs-string">'SG_UF_PROVA'</span>,<span class="hljs-string">"TP_MEDIA_NOTAS"</span>].std().reset_index()
+
+mapa = folium.Map(
+	location=[-<span class="hljs-number">15.77972</span>, -<span class="hljs-number">47.92972</span>],
+	zoom_start=<span class="hljs-number">3</span>
+)
+
+folium.Choropleth(
+	geo_data=state_geo,
+	name=<span class="hljs-string">'Dispersão de notas por estado'</span>,
+	data=notas_por_uf_std,
+	columns=[<span class="hljs-string">'SG_UF_PROVA'</span>,<span class="hljs-string">'TP_MEDIA_NOTAS'</span>],
+	key_on=<span class="hljs-string">'feature.id'</span>,
+	fill_color=<span class="hljs-string">'YlGn'</span>,
+	fill_opacity=<span class="hljs-number">1</span>,
+	line_opacity=<span class="hljs-number">0.1</span>,
+	legend_name=<span class="hljs-string">'Desviação estándar das notas'</span>
+).add_to(mapa)
+
+mapa</code></pre></div></div>
+<!-- END of codeblock 16 -->
+
+						<img src="/assets/images/5.png"><div class="legend">Imagem 5 - Mapa das desviações estandares das notas por estado</div>
+
+<!-- Codeblock 17-->
+<div class="code-toggle" id="code-toogle17" href="#bar" name="bar" onclick="toggle_visibility('code-on-17', 'code-toogle17');">▾ Mostrar código ▾</div>
+<div id="code-on-17" style="display:none; width: 100%; margin-top: -30px;">
+<div class="clipboard" tabindex="0" onclick="CopyToClipboard('code17'); fadeinout('copy-tooltip17')" title="Copy to clipboard"></div>
+<div class="code_block"><div class="copy-tooltip" id="copy-tooltip17">Copiado para prancheta</div>
+<pre><code class="language-python hljs" id="code17"><span class="hljs-keyword">def</span> <span class="hljs-title function_">graficar_distribuição_notas</span>(df, dict_, output_col, compare=<span class="hljs-literal">False</span>, compare_cols=[]):
+	<span class="hljs-string">"""Função para graficar as subplots das visualizações geradas com seaborn.distplot e opcionalmente
+	graficar conjunto de gráficos com cores diferentes para facilitar a comparação"""</span>
+	fig, ax = plt.subplots(<span class="hljs-built_in">len</span>(dict_), figsize=(<span class="hljs-number">12</span>, <span class="hljs-number">12</span>))
+	<span class="hljs-keyword">for</span> i, row <span class="hljs-keyword">in</span> <span class="hljs-built_in">enumerate</span>(dict_):
+		<span class="hljs-keyword">if</span> compare:
+			<span class="hljs-keyword">for</span> col <span class="hljs-keyword">in</span> compare_cols:
+				<span class="hljs-keyword">if</span> row==col:
+					sns.distplot(df.loc[row, output_col], ax=ax[i], color=<span class="hljs-string">"Yellow"</span>)
+				<span class="hljs-keyword">else</span>:
+					sns.distplot(df.loc[row, output_col], ax=ax[i], color=<span class="hljs-string">"Green"</span>)
+		<span class="hljs-keyword">else</span>:
+			sns.distplot(df.loc[row, output_col], ax=ax[i], color=<span class="hljs-string">"Green"</span>)
+		ax[i].set_title(<span class="hljs-string">"Distribuição das notas {}"</span>.<span class="hljs-built_in">format</span>(dict_[row]))
+	fig.tight_layout(h_pad=<span class="hljs-number">3</span>)
+
+<span class="hljs-comment"># Graficar uma matriz de distribuições das notas por estados para comparação</span>
+states_dict = {<span class="hljs-string">"CE"</span>:<span class="hljs-string">"no Ceará"</span>, <span class="hljs-string">"GO"</span>:<span class="hljs-string">"no Goiás"</span>, <span class="hljs-string">"RS"</span>:<span class="hljs-string">"no Rio Grande do Sul"</span>, <span class="hljs-string">"SP"</span>:<span class="hljs-string">"no São Paulo"</span>, 
+			<span class="hljs-string">"MG"</span>:<span class="hljs-string">"em Minas Geais"</span>}
+output_col = <span class="hljs-string">"TP_MEDIA_NOTAS"</span>
+graficar_distribuição_notas(df.set_index(<span class="hljs-string">"SG_UF_PROVA"</span>), 
+						states_dict, 
+						output_col, 
+						compare=<span class="hljs-literal">True</span>, 
+						compare_cols=[<span class="hljs-string">"CE"</span>,<span class="hljs-string">"GO"</span>])</code></pre></div></div>
+<!-- END of codeblock 17 -->
+
+						<img src="/assets/images/6.png" style="max-width: 855px;"><div class="legend">Imagem 6 - Matriz de distribuições das notas por estados</div>
+
+						<h4>Variáveis que mais influenciaram nas notas</h4>
+						<p>Se evidenciou que as variáveis que mais incidiram nas notas do ENEM foram as relacionadas à renda mensal e à quantidade de computadores no residência participante. Estas variáveis estão correlacionados de maneira positiva (ver mapa de calor no ponto 7.2).</p>
+
+						<p>A lingua elegida pelo participante para fazer a prova (inglês ou espanhol) também influenciou notavelmente nas notas. Os participantes que fizeram a prova de lingua espanhola tiveram em média um peor desempenho dos que fizeram a de lingua inglesa. As outras variáveis que tiveram destaque em menor medida foram:</p>
+							<p><ol>
+								<li>- A quantidade de banheiros na residência do participante. Esta variável está fortemente correlacionado com a renda mensual (ver mapa de calor na imagem 1)</li>
+								<li>- Se o participante solicitou recurso para atendimento especializado nos dias da provas.
+								</li>
+							  </ol>
+							</p>
+
+<!-- Codeblock 18-->
+<div class="code-toggle" id="code-toogle18" href="#bar" name="bar" onclick="toggle_visibility('code-on-18', 'code-toogle18');">▾ Mostrar código ▾</div>
+<div id="code-on-18" style="display:none; width: 100%; margin-top: -30px;">
+<div class="clipboard" tabindex="0" onclick="CopyToClipboard('code18'); fadeinout('copy-tooltip18')" title="Copy to clipboard"></div>
+<div class="code_block"><div class="copy-tooltip" id="copy-tooltip18">Copiado para prancheta</div>
+<pre><code class="language-python hljs" id="code18"><span class="hljs-keyword">def</span> <span class="hljs-title function_">graficar_atributos_mais_importantes</span>(<span class="hljs-params">x,y</span>):
+	<span class="hljs-string">"""Função para graficar os atributos mais importantes de acordo com o modelo de regressão linear"""</span>
+	model = XGBRegressor()
+	sc = StandardScaler()
+	x_sc = sc.fit_transform(x)
+	model.fit(x_sc,y)
+	coefs = pd.DataFrame(columns=x.columns)
+	coefs = coefs.transpose().reset_index()
+	coefs.columns = [<span class="hljs-string">"Atributos"</span>]
+	coefs[<span class="hljs-string">"Coeficientes"</span>] = model.feature_importances_
+	coefs[<span class="hljs-string">"abs_value"</span>] = coefs[<span class="hljs-string">"Coeficientes"</span>].apply(<span class="hljs-keyword">lambda</span> x: <span class="hljs-built_in">abs</span>(x))
+	coefs[<span class="hljs-string">"colors"</span>] = coefs[<span class="hljs-string">"Coeficientes"</span>].apply(<span class="hljs-keyword">lambda</span> x: <span class="hljs-string">"green"</span> <span class="hljs-keyword">if</span> x &gt; <span class="hljs-number">0</span> <span class="hljs-keyword">else</span> <span class="hljs-string">"Red"</span>)
+	coefs = coefs.sort_values(<span class="hljs-string">"abs_value"</span>, ascending=<span class="hljs-literal">False</span>)
+	fig, ax = plt.subplots(<span class="hljs-number">1</span>, <span class="hljs-number">1</span>, figsize=(<span class="hljs-number">10</span>, <span class="hljs-number">6</span>))
+	sns.barplot(x=<span class="hljs-string">"Coeficientes"</span>,
+				y=<span class="hljs-string">"Atributos"</span>,
+				data=coefs.head(<span class="hljs-number">20</span>),
+				palette=coefs.head(<span class="hljs-number">20</span>)[<span class="hljs-string">"colors"</span>])
+	ax.set_xticklabels(ax.get_xticklabels(), rotation=<span class="hljs-number">90</span>, fontsize=<span class="hljs-number">10</span>)
+	ax.set_title(<span class="hljs-string">"Top 20 atributos que mais influenciaram nas notas do ENEM 2019"</span>, fontsize=<span class="hljs-number">20</span>, pad=<span class="hljs-number">20</span>)
+	ax.set_xlabel(<span class="hljs-string">"Coeficiente"</span>, fontsize=<span class="hljs-number">15</span>)
+	ax.set_ylabel(<span class="hljs-string">"Atributos"</span>, fontsize=<span class="hljs-number">15</span>)
+
+<span class="hljs-comment"># Graficar os atributos que mais influenciaram nas notas no modelo de regressão linear</span>
+features = df.drop([<span class="hljs-string">"SG_UF_RESIDENCIA"</span>,<span class="hljs-string">"SG_UF_NASCIMENTO"</span>, <span class="hljs-string">"SG_UF_PROVA"</span>], axis=<span class="hljs-number">1</span>)
+x = features.drop([<span class="hljs-string">"TP_MEDIA_NOTAS"</span>], axis=<span class="hljs-number">1</span>).astype(<span class="hljs-string">"int64"</span>)
+y = features[<span class="hljs-string">"TP_MEDIA_NOTAS"</span>].astype(<span class="hljs-string">"float64"</span>)
+graficar_atributos_mais_importantes(x,y)</code></pre></div></div>
+<!-- END of codeblock 18 -->
+
+						<img src="/assets/images/7.png" style="max-width: 824px"><div class="legend">Imagem 7 - Coeficiente dos 20 atributos mais importantes no modelo</div>
+
+<!-- Codeblock 19-->
+<div class="code-toggle" id="code-toogle19" href="#bar" name="bar" onclick="toggle_visibility('code-on-19', 'code-toogle19');">▾ Mostrar código ▾</div>
+<div id="code-on-19" style="display:none; width: 100%; margin-top: -30px;">
+<div class="clipboard" tabindex="0" onclick="CopyToClipboard('code19'); fadeinout('copy-tooltip19')" title="Copy to clipboard"></div>
+<div class="code_block"><div class="copy-tooltip" id="copy-tooltip19">Copiado para prancheta</div>
+<pre><code class="language-python hljs" id="code19"><span class="hljs-comment"># Graficar a comparação das distribuições dos atributos de idioma escolhido</span>
+ling_dict = {<span class="hljs-number">0</span>:<span class="hljs-string">"na prova de Inglês"</span>, <span class="hljs-number">1</span>:<span class="hljs-string">"na prova de Espanhol"</span>}
+graficar_distribuição_notas(df.set_index(<span class="hljs-string">"TP_LINGUA"</span>), ling_dict, <span class="hljs-string">"TP_MEDIA_NOTAS"</span>)</code></pre></div></div>
+<!-- END of codeblock 19 -->
+
+					<img src="/assets/images/8.png" style="max-width: 855px"><div class="legend">Imagem 8 - Comparação das distribuições do atributo de idioma escolhido</div>
+
+					<h>Considerações finais</h>
+					<p>Este projeto mostrou as etapas consideradas necessárias para a extração, transformação e análise dos microdados referentes ao periodo de 2019 diponibilizados pelo ENEM, para o problema e os objetivos de análise definidos. A análise descritiva sobre estes dados conseguiu extrair algums dos fatores que influenciaram nas notas do ENEM. Este fatores estão persistentemente ligados aos aspectos socioeconômicos dos participantes das provas. O nível de renda dos familiares dos participantes demostrou ser o fator principal de influência. Tendo em conta a revisão da literatura relacionada ao tema e a importancia do ENEM para a inserção dos estudantes de ensino médio nas universidades do país, os resultados da análise uma vez mais realçam a necessidade de políticas públicas voltadas a melhorar a renda média de cada familia para que as disparidades na sejam refletidas nos resultados das provas.</p>
+					<h>Referências</h>
+					<p>Melo, R. O., Freitas, A. C. de, Francisco, E. de R., & Motokane, M. T. (2021). Impacto das variáveis socioeconômicas no desempenho do Enem: uma análise espacial e sociológica. Revista De Administração Pública. Recuperado de https://bibliotecadigital.fgv.br/ojs/index.php/rap/article/view/84874</p>
+					<p>Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira (2019). Microdados do Enem 2019. Recuperado em 20 de junho de 2020, de http://portal.inep.gov.br/web/guest/microdados.</p>
+				</text>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="/assets/js/main.js"></script>
+	<script>
+		function toggle_visibility(id, button) {
+		let	x = document.getElementById(button)
+			let e = document.getElementById(id);
+		switch(e.style.display) {
+			case 'none':
+			e.style.display = 'block';
+			x.innerHTML = '▴ Ocultar código ▴'
+			break;
+			case 'block':
+			e.style.display = 'none';
+			x.innerHTML = '▾ Mostrar código ▾'
+			break;
+		}
+		}
+	</script>
+</body>
+</html>
