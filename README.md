@@ -1,7 +1,7 @@
 ### Para instruções e outras informações em português, por favor vá ao seguinte [link](LEA-ME.md).
 
-**Project start date:** December 4, 2021
-**Project end date:** December 8, 2021
+-**Project start date:** December 4, 2021
+-**Project end date:** December 8, 2021
 
 # Jupyter-Spark ENEM 2019
 In this project I'll address some of the social and demographic aspects on the scores of the ENEM 2019, a standardized test used for admission in Brazilian colleges published in 2019. Spark was used for the ingestion steps; statistical analysis was performed with Pandas, Statsmodels and Scikit-learn; and visualizations were generated inside the notebook with the help of the Matplotlib, Seaborn and Folium libraries.
