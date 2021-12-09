@@ -2,7 +2,7 @@
  [![Docker](https://badgen.net/badge/icon/docker?icon=docker&label)](https://https://docker.com/) [![Website kauvinlucas.com](https://img.shields.io/website-up-down-green-red/https/lbesson.bitbucket.io.svg)](http://kauvinlucas.com/projects/jupyter-spark-enem-2019/en.html)
 
 
-### Para instruções e outras informações em português, por favor vá ao seguinte [link](LEA-ME.md).
+### Para instruções e outras informações em português, por favor vá ao seguinte [link](LEIA-ME.md).
 
 ***Project start date:** December 4, 2021
 
