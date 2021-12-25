@@ -3,8 +3,8 @@
 <head>
   	<meta charset="utf-8">
   	<title>Projeto: Jupyter-Spark ENEM 2019</title>
-	<link rel="stylesheet" href="/assets/css/theme.css" id="theme">
-	<link rel="stylesheet" href="/assets/css/github.min.css">
+	<link rel="stylesheet" href="assets/css/theme.css" id="theme">
+	<link rel="stylesheet" href="assets/css/github.min.css">
   	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
 
 </head>
@@ -13,15 +13,15 @@
 		<div class="container_article">
 			<div class="blog_block">
 					<h1>Jupyter-Spark ENEM 2019</h1>
-					<div class="profile_picture"><img src="/images/user_large.jpg" height="40" width="40" alt=""></div>
+					<div class="profile_picture"><img src="https://kauvinlucas.com/images/user_large.jpg" height="40" width="40" alt=""></div>
 						<div class="title_block_bottom">
 							<h2>Por Kauvin Lucas</h2>
-							<img src="/images/clock.svg" style="font-size: 12px; font-weight: 200; margin-right: 5px; color: rgb(55, 0, 145); margin-top: 4px; float: left; text-align: left;"><h3>9 de Dezembro de 2021 - 10 min de leitura</h3>
+							<img src="https://kauvinlucas.com/images/clock.svg" style="font-size: 12px; font-weight: 200; margin-right: 5px; color: rgb(55, 0, 145); margin-top: 4px; float: left; text-align: left;"><h3>9 de Dezembro de 2021 - 10 min de leitura</h3>
 						</div>
 				
 					<div class="text_block">
 					<text>
-						<img src="/assets/images/main.jpg">
+						<img src="https://kauvinlucas.com/projects/jupyter-spark-enem-2019/assets/main.jpg">
 						<p>Neste projeto, irei abordar algums dos aspectos sociais e demográficos nas pontuações do ENEM 2019, um teste padronizado usado para admissão em universidades brasileiras cujos microdados foram publicados em 2019. Spark foi usado para etapas de extração e transformação dos microdados; a análise estatística foi feita no Pandas, Statsmodels e Scikit-learn; e as visualizações dos dados foram geradas dentro do notebook com o auxilio das bibliotecas Matplotlib, Seaborn e Folium.</p>
 					<h>Introdução</h>
 					<p>O Exame Nacional do Ensino Médio (ENEM) é um exame padronizado de escala nacional usado para avaliar o dominio dos participantes que finalizaram ou estão por finalizar o ensino médio nas áreas da ciência, tecnologia e linguagem no Brasil. Além de viabilizar o acesso por parte dos participantes ao ensino superior, a prova também reflete a realidade socioeconômica em que cada um deles vivem.</p>
@@ -339,7 +339,7 @@ numeric_features = df[[df.columns[i] <span class="hljs-keyword">for</span> i,t <
 df_corr = numeric_features.corr()
 heat_map(df_corr)</code></pre></div></div>
 <!-- END of codeblock 9 -->
-						<img src="/assets/images/1.png"><div class="legend">Imagem 1 - Mapa de calor das correlações entre as variáveis numéricas</div>
+						<img src="https://kauvinlucas.com/projects/jupyter-spark-enem-2019/assets/1.png"><div class="legend">Imagem 1 - Mapa de calor das correlações entre as variáveis numéricas</div>
 	
 <!-- Codeblock 10-->
 <div class="code-toggle" id="code-toogle10" href="#bar" name="bar" onclick="toggle_visibility('code-on-10', 'code-toogle10');">▾ Mostrar código ▾</div>
@@ -421,7 +421,7 @@ folium.Choropleth(
 mapa</code></pre></div></div>
 <!-- END of codeblock 13 -->
 
-						<img src="/assets/images/2.png"><div class="legend">Imagem 2 - Mapa das médias de notas por estado</div>
+						<img src="assets/images/notas-por-estado.png"><div class="legend">Imagem 2 - Mapa das médias de notas por estado</div>
 
 <!-- Codeblock 14-->
 <div class="code-toggle" id="code-toogle14" href="#bar" name="bar" onclick="toggle_visibility('code-on-14', 'code-toogle14');">▾ Mostrar código ▾</div>
@@ -451,7 +451,7 @@ folium.Choropleth(
 
 mapa</code></pre></div></div>
 <!-- END of codeblock 14 -->
-						<img src="/assets/images/3.png"><div class="legend">Imagem 3 - Mapa das rendas médias mensuais por estado</div>
+						<img src="assets/images/renda-mensal-por-estado.png"><div class="legend">Imagem 3 - Mapa das rendas médias mensuais por estado</div>
 
 <!-- Codeblock 15-->
 <div class="code-toggle" id="code-toogle15" href="#bar" name="bar" onclick="toggle_visibility('code-on-15', 'code-toogle15');">▾ Mostrar código ▾</div>
@@ -480,7 +480,7 @@ folium.Choropleth(
 mapa</code></pre></div></div>
 <!-- END of codeblock 15 -->
 
-						<img src="/assets/images/4.png"><div class="legend">Imagem 4 - Mapa dos índices de IDH por estado</div>
+						<img src="assets/images/idh-por-estado.png"><div class="legend">Imagem 4 - Mapa dos índices de IDH por estado</div>
 
 						<p>Ao visualizar a dispersão das notas, se nota a simple vista que os participantes destacados (com notas de 700 ou mais) dos estados de Ceará e Goiás são proporcionalmente comparáveis ou superiores aos estados com maiores médias de notas no país, apesar das mencionadas regiões terem médias de notas inferiores no geral. Isso foi validado ao comparar com detalhe a distribuição das notas médias das provas nesses respectivos estados versus nos estados com melhores médias de notas. Também se infere que os estados do Acre, Amazonas, Rondônia e Amapá tiveram a menor proporção de participantes destacados em comparação com os demais estados do país.</p>
 
@@ -513,7 +513,7 @@ folium.Choropleth(
 mapa</code></pre></div></div>
 <!-- END of codeblock 16 -->
 
-						<img src="/assets/images/5.png"><div class="legend">Imagem 5 - Mapa das desviações estandares das notas por estado</div>
+						<img src="assets/images/dispersao-notas-por-estado.png"><div class="legend">Imagem 5 - Mapa das desviações estandares das notas por estado</div>
 
 <!-- Codeblock 17-->
 <div class="code-toggle" id="code-toogle17" href="#bar" name="bar" onclick="toggle_visibility('code-on-17', 'code-toogle17');">▾ Mostrar código ▾</div>
@@ -547,7 +547,7 @@ graficar_distribuição_notas(df.set_index(<span class="hljs-string">"SG_UF_PROV
 						compare_cols=[<span class="hljs-string">"CE"</span>,<span class="hljs-string">"GO"</span>])</code></pre></div></div>
 <!-- END of codeblock 17 -->
 
-						<img src="/assets/images/6.png" style="max-width: 855px;"><div class="legend">Imagem 6 - Matriz de distribuições das notas por estados</div>
+						<img src="https://kauvinlucas.com/projects/jupyter-spark-enem-2019/assets/6.png" style="max-width: 855px;"><div class="legend">Imagem 6 - Matriz de distribuições das notas por estados</div>
 
 						<h4>Variáveis que mais influenciaram nas notas</h4>
 						<p>Se evidenciou que as variáveis que mais incidiram nas notas do ENEM foram as relacionadas à renda mensal e à quantidade de computadores no residência participante. Estas variáveis estão correlacionados de maneira positiva (ver mapa de calor no ponto 7.2).</p>
@@ -595,7 +595,7 @@ y = features[<span class="hljs-string">"TP_MEDIA_NOTAS"</span>].astype(<span cla
 graficar_atributos_mais_importantes(x,y)</code></pre></div></div>
 <!-- END of codeblock 18 -->
 
-						<img src="/assets/images/7.png" style="max-width: 824px"><div class="legend">Imagem 7 - Coeficiente dos 20 atributos mais importantes no modelo</div>
+						<img src="https://kauvinlucas.com/projects/jupyter-spark-enem-2019/assets/7.png" style="max-width: 824px"><div class="legend">Imagem 7 - Coeficiente dos 20 atributos mais importantes no modelo</div>
 
 <!-- Codeblock 19-->
 <div class="code-toggle" id="code-toogle19" href="#bar" name="bar" onclick="toggle_visibility('code-on-19', 'code-toogle19');">▾ Mostrar código ▾</div>
@@ -607,10 +607,10 @@ ling_dict = {<span class="hljs-number">0</span>:<span class="hljs-string">"na pr
 graficar_distribuição_notas(df.set_index(<span class="hljs-string">"TP_LINGUA"</span>), ling_dict, <span class="hljs-string">"TP_MEDIA_NOTAS"</span>)</code></pre></div></div>
 <!-- END of codeblock 19 -->
 
-					<img src="/assets/images/8.png" style="max-width: 855px"><div class="legend">Imagem 8 - Comparação das distribuições do atributo de idioma escolhido</div>
+					<img src="https://kauvinlucas.com/projects/jupyter-spark-enem-2019/assets/8.png" style="max-width: 855px"><div class="legend">Imagem 8 - Comparação das distribuições do atributo de idioma escolhido</div>
 
 					<h>Considerações finais</h>
-					<p>Este projeto mostrou as etapas consideradas necessárias para a extração, transformação e análise dos microdados referentes ao periodo de 2019 diponibilizados pelo ENEM, para o problema e os objetivos de análise definidos. A análise descritiva sobre estes dados conseguiu extrair algums dos fatores que influenciaram nas notas do ENEM. Este fatores estão persistentemente ligados aos aspectos socioeconômicos dos participantes das provas. O nível de renda dos familiares dos participantes demostrou ser o fator principal de influência. Tendo em conta a revisão da literatura relacionada ao tema e a importancia do ENEM para a inserção dos estudantes de ensino médio nas universidades do país, os resultados da análise uma vez mais realçam a necessidade de políticas públicas voltadas a melhorar a renda média de cada familia para que as disparidades na sejam refletidas nos resultados das provas.</p>
+					<p>Este projeto mostrou as etapas consideradas necessárias para a extração, transformação e análise dos microdados referentes ao periodo de 2019 diponibilizados pelo ENEM, para o problema e os objetivos de análise definidos. A análise descritiva sobre estes dados conseguiu extrair algums dos fatores que influenciaram nas notas do ENEM. Este fatores estão persistentemente ligados aos aspectos socioeconômicos dos participantes das provas. O nível de renda dos familiares dos participantes demostrou ser o fator principal de influência. Tendo em conta a revisão da literatura relacionada ao tema e a importancia do ENEM para a inserção dos estudantes de ensino médio nas universidades do país, os resultados da análise uma vez mais realçam a necessidade de políticas públicas voltadas a melhorar a renda média de cada familia para que as disparidades não sejam refletidas nos resultados das provas.</p>
 					<h>Referências</h>
 					<p>Melo, R. O., Freitas, A. C. de, Francisco, E. de R., & Motokane, M. T. (2021). Impacto das variáveis socioeconômicas no desempenho do Enem: uma análise espacial e sociológica. Revista De Administração Pública. Recuperado de https://bibliotecadigital.fgv.br/ojs/index.php/rap/article/view/84874</p>
 					<p>Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira (2019). Microdados do Enem 2019. Recuperado em 20 de junho de 2020, de http://portal.inep.gov.br/web/guest/microdados.</p>
