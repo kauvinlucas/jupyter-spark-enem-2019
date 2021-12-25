@@ -9,4 +9,4 @@ O notebook principal deste projeto pode ser encontrado [aqui](src/main.ipynb). O
 
 
 # Como usar este repositório
-Instruções para usar este repositório podem ser encontradas [aqui](docs/pt.md). São necessarios Docker e Docker Compose instalados na máquina para poder usar os notebooks.
+Instruções para executar o notebook do projeto podem ser encontradas [aqui](docs/pt.md). Serão necessarios Docker e Docker Compose instalados na máquina para poder usar os notebooks.

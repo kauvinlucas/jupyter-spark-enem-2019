@@ -15,4 +15,4 @@ The notebook (written in Portuguese) of this project can be found [here](src/mai
 
 
 # How to use this repository
-Instructions on how to use this repository can be found [here](docs/en.md). Docker and docker-compose must be installed on machine in order to execute the notebooks.
+Instructions on how to execute the notebook can be found [here](docs/en.md). Docker and docker-compose must be installed on machine in order to execute the notebooks.
